@@ -2,7 +2,7 @@
 <resources>
 
     <string name="app_name">spotifyStreamerStage1</string>
-    <string name="hello_world">Hello world! integrated as with github now</string>
+    <string name="hello_world">Hello world! integrated now</string>
     <string name="action_settings">Settings</string>
 
 </resources>
