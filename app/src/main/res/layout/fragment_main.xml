@@ -7,9 +7,20 @@
     tools:context=".MainActivity$PlaceholderFragment"
     android:id="@+id/weatherFrame">
 
+    <EditText
+        android:layout_width="200dp"
+        android:layout_height="63dp"
+        android:id="@+id/editText"
+        android:layout_gravity="left|top"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:hint="Enter Artist Name"
+        android:imeOptions="actionDone"
+        android:singleLine="true" />
+
     <ListView
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="fill_parent"
         android:id="@+id/listViewForecast"
-        android:layout_gravity="left|top" />
+        android:layout_marginTop="50dp" />
+
 </FrameLayout>

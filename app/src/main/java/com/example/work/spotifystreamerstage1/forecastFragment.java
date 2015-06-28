@@ -1,9 +1,13 @@
 package com.example.work.spotifystreamerstage1;
 
+import android.content.Context;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.text.format.Time;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -12,8 +16,11 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -28,6 +35,12 @@ import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 
+import kaaes.spotify.webapi.android.SpotifyApi;
+import kaaes.spotify.webapi.android.SpotifyService;
+import kaaes.spotify.webapi.android.models.Artist;
+import kaaes.spotify.webapi.android.models.ArtistsPager;
+import kaaes.spotify.webapi.android.models.Pager;
+
 /**
  * A placeholder fragment containing a simple view.
  */
@@ -37,6 +50,9 @@ public class forecastFragment extends Fragment {
     public final String TAG = "forecastFragment";
     public final String weatherRequest =
             "http://api.openweathermap.org/data/2.5/forecast/daily?q=80401,us&mode=json&units=metric&cnt=7";
+    public final static String EXTRA_MESSAGE = "com.example.work.spotifystreamerstage1.MESSAGE";
+
+    public EditText artistName;
 
     public forecastFragment() {
     }
@@ -57,7 +73,9 @@ public class forecastFragment extends Fragment {
         int id = item.getItemId();
         if (id == R.id.action_refresh) {
             Log.d(TAG,"selected refresh");
-            new fetchWeatherTask().execute("80401");
+
+            String name = artistName.getText().toString();
+            new fetchWeatherTask().execute(name);
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -95,12 +113,36 @@ public class forecastFragment extends Fragment {
             return rootView;
 */
 
+        artistName = (EditText)rootView.findViewById(R.id.editText);
+
+        artistName.addTextChangedListener(new TextWatcher(){
+            public void afterTextChanged(Editable s) {
+                Log.d(TAG,"text entered " + s.toString());
+                String name = artistName.getText().toString();
+                // can get null when deleting the last character
+                if (name.isEmpty() == false)
+                   new fetchWeatherTask().execute(name);
+            }
+            public void beforeTextChanged(CharSequence s, int start, int count, int after){}
+            public void onTextChanged(CharSequence s, int start, int before, int count){}
+        });
+
         adapter = new ArrayAdapter<String>(
                 getActivity(), R.layout.list_item_forecast, R.id.list_item_forecast_textview, weekforecast);
 
         ListView weatherView = (ListView) rootView.findViewById(R.id.listViewForecast);
-
         weatherView.setAdapter(adapter);
+
+        weatherView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                String value = adapter.getItem(position);
+                Toast.makeText(getActivity(),value,Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(getActivity(), detailActivty.class);
+                intent.putExtra(EXTRA_MESSAGE, value);
+                startActivity(intent);
+            }
+        });
 
         return rootView;
 
@@ -205,28 +247,39 @@ public class forecastFragment extends Fragment {
 
     }
 
-
     private class fetchWeatherTask extends AsyncTask<String, String, String[]> {
         // These two need to be declared outside the try/catch
         // so that they can be closed in the finally block.
-        HttpURLConnection urlConnection = null;
-        BufferedReader reader = null;
-        private final String asyncTAG = fetchWeatherTask.class.getSimpleName();
-        int numDays = 7;
+
+        SpotifyApi api = new SpotifyApi();
 
         // Will contain the raw JSON response as a string.
         String forecastJsonStr = null;
+
+        /* weather app
+        HttpURLConnection urlConnection = null;
+        BufferedReader reader = null;
+        int numDays = 7;
+        **** weather app */
+        private final String asyncTAG = fetchWeatherTask.class.getSimpleName();
+
         /** The system calls this to perform work in a worker thread and
          * delivers it the parameters given to AsyncTask.execute() */
-        protected String[] doInBackground(String... zipCode) {
+        protected String[] doInBackground(String... name) {
 
-            try {
+//            try {
                 // Construct the URL for the OpenWeatherMap query
                 // Possible parameters are avaiable at OWM's forecast API page, at
                 // http://openweathermap.org/API#forecast
 
-                //http://api.openweathermap.org/data/2.5/forecast/daily?q=80401,us&mode=json&units=metric&cnt=7
+                if (name[0] != null) {
+                    Log.d(asyncTAG, "artist name " + name[0]);
 
+                    SpotifyService spotify = api.getService();
+                    ArtistsPager results = spotify.searchArtists(name[0]);
+
+                /* weather app
+                //http://api.openweathermap.org/data/2.5/forecast/daily?q=80401,us&mode=json&units=metric&cnt=7
                 Uri.Builder builder = new Uri.Builder();
                 builder.scheme("http")
                         .authority("api.openweathermap.org")
@@ -239,7 +292,7 @@ public class forecastFragment extends Fragment {
                         .appendQueryParameter("units", "metric")
                         .appendQueryParameter("cnt", Integer.toString(numDays));
                 String myUrl = builder.build().toString();
-                Log.d(TAG,myUrl);
+                Log.d(TAG, myUrl);
                 publishProgress("10%");
                 URL url = new URL(myUrl);
 
@@ -248,8 +301,11 @@ public class forecastFragment extends Fragment {
                 urlConnection.setRequestMethod("GET");
                 urlConnection.connect();
 
-                publishProgress("50%");
+                *** weather app */
 
+                    publishProgress("50%");
+
+                /* weather app
                 // Read the input stream into a String
                 InputStream inputStream = urlConnection.getInputStream();
                 StringBuffer buffer = new StringBuffer();
@@ -272,7 +328,12 @@ public class forecastFragment extends Fragment {
                     return null;
                 }
                 forecastJsonStr = buffer.toString();
+
+                **** weather app */
+
+            /* weather app
             } catch (IOException e) {
+
                 Log.e(asyncTAG, "Error ", e);
                 // If the code didn't successfully get the weather data, there's no point in attemping
                 // to parse it.
@@ -289,7 +350,9 @@ public class forecastFragment extends Fragment {
                     }
                 }
             }
+            **** weather app */
 
+            /* weather app
             try {
                 String data[] = getWeatherDataFromJson(forecastJsonStr, numDays);
                 publishProgress("100%");
@@ -299,8 +362,34 @@ public class forecastFragment extends Fragment {
                 publishProgress("95%");
                 return null;
             }
-            //return forecastJsonStr;
+            *** weather app */
 
+                    //return forecastJsonStr;
+                    int len = results.artists.total;
+                    if (len > 20) len = 20;
+                    if (len != 0) {
+                        String[] data = new String[len];
+//            Log.d(asyncTAG, results.toString());
+                        Log.d(asyncTAG, "len = " + len);
+//            for (Artist item : results.artists.items) {
+                        Artist item;
+                        for (int i = 0; i < len; i++) {
+                            item = results.artists.items.get(i);
+                            Log.d(asyncTAG, "Found " + item.name);
+                            data[i] = item.name;
+                        }
+                        return data;
+                    }
+                    else {
+                        len = 1; // so we can say none
+                        String[] data = new String[len];
+                        data[0] = "none";
+                        return data;
+                    }
+            }
+            else {
+                return null;
+            }
         }
 
         @Override
@@ -312,13 +401,22 @@ public class forecastFragment extends Fragment {
          * the result from doInBackground() */
         protected void onPostExecute(String[] result) {
             adapter.clear();
-            adapter.addAll(result);
+            if (result != null)
+                if (result[0].equals("none"))
+                    Toast.makeText(adapter.getContext(),"No Artists Found", Toast.LENGTH_SHORT).show();
+                else
+                    adapter.addAll(result);
             // with arrayAdapter, it internally calls notifyDataSetChanged
 
             //for (String item : result) {
             //    adapter.add(item);
                 //Log.d(asyncTAG, item);
             //}
+
+            else
+                Toast.makeText(adapter.getContext(),"Internet Connection problem?", Toast.LENGTH_LONG).show();
+
+            publishProgress("100%");
 
         }
 
