@@ -20,18 +20,18 @@ public class detailActivty extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        //setContentView(R.layout.activity_detail_activty);
+        setContentView(R.layout.activity_detail_activty);
 
         Intent intent = getIntent();
         String message = intent.getStringExtra(forecastFragment.EXTRA_MESSAGE);
 
         // Create the text view
-        TextView textView = new TextView(this);
-        textView.setTextSize(40);
-        textView.setText(message);
+        //TextView textView = new TextView(this);
+        //textView.setTextSize(40);
+        //textView.setText(message);
 
         // Set the text view as the activity layout
-        setContentView(textView);
+        //setContentView(textView);
     }
 
 
@@ -68,7 +68,8 @@ public class detailActivty extends ActionBarActivity {
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.fragment_detail_activty, container, false);
+//            View rootView = inflater.inflate(R.layout.fragment_detail_activty, container, false);
+            View rootView = inflater.inflate(R.layout.list_item_artist, container, false);
             return rootView;
         }
     }

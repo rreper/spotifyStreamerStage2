@@ -6,5 +6,6 @@
     <string name="action_settings">Settings</string>
     <string name="refresh">Refresh</string>
     <string name="title_activity_detail_activty">detailActivty</string>
+    <string name="artist">Artist Name</string>
 
 </resources>
