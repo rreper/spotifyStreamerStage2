@@ -155,7 +155,7 @@ public class forecastFragment extends Fragment {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 artistPicture value = adapter.getItem(position);
                 Toast.makeText(getActivity(),value.name,Toast.LENGTH_SHORT).show();
-                Intent intent = new Intent(getActivity(), detailActivty.class);
+                Intent intent = new Intent(getActivity(), MainActivityTracks.class);
                 intent.putExtra(EXTRA_MESSAGE, value.name);
                 startActivity(intent);
             }

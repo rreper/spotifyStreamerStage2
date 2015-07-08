@@ -5,24 +5,38 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/textView"
+        android:id="@+id/textViewTrack"
         android:textSize="30dp"
         android:layout_alignParentTop="true"
-        android:layout_alignBottom="@+id/imageView"
         android:gravity="center_vertical"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true"
-        android:layout_toRightOf="@+id/imageView"
-        android:layout_toEndOf="@+id/imageView" />
+        android:layout_toRightOf="@+id/imageViewCD"
+        android:layout_toEndOf="@+id/imageViewCD"
+        android:hint="track"
+        android:textIsSelectable="false" />
 
     <ImageView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/imageView"
+        android:id="@+id/imageViewCD"
         android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:minHeight="75dp"
         android:minWidth="75dp"
         android:contentDescription="Artist Icon" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/textViewAlbum"
+        android:textSize="30dp"
+        android:gravity="center_vertical"
+        android:hint="Album"
+        android:layout_below="@+id/textViewTrack"
+        android:layout_toRightOf="@+id/imageViewCD"
+        android:layout_toEndOf="@+id/imageViewCD" />
+
+
 </RelativeLayout>

@@ -21,7 +21,9 @@
         android:layout_width="wrap_content"
         android:layout_height="fill_parent"
         android:id="@+id/listViewForecast"
-        android:layout_marginTop="50dp"
+        android:layout_marginTop="60dp"
+        android:divider="@layout/divider"
+        android:dividerHeight="3sp"
         android:layout_gravity="center_horizontal" />
 
     <TextView
