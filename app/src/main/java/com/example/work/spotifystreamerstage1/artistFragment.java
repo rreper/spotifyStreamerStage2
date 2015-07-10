@@ -36,7 +36,6 @@ public class artistFragment extends Fragment {
     public artistPicture noEntries = new artistPicture("none", "none", "none");
     public int totalArtistsFound = 0;
     public int totalArtistsShown = 0;
-    public int totalTracksFound = 0;
 
     public final String TAG = "artistFragment";
     public final static String EXTRA_MESSAGE = "com.example.work.spotifystreamerstage1.MESSAGE";
@@ -155,7 +154,7 @@ public class artistFragment extends Fragment {
                     results = spotify.searchArtists(name[0]);
                 }
                 catch (Exception e) {
-                    Log.d(TAG,"Exception caught");
+                    Log.d(TAG,"Spotify service exception caught");
                     return null;
                 }
 
@@ -173,7 +172,7 @@ public class artistFragment extends Fragment {
                     for (int i = 0; i < len; i++) {
                         item = results.artists.items.get(i);
                         if (item.images.size() > 0)
-                            url = item.images.get(0).url.toString();
+                            url = item.images.get(0).url;
                         else
                             url = "none";
                         artistPicture a = new artistPicture( item.name, url, item.id);
