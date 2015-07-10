@@ -1,7 +1,6 @@
 package com.example.work.spotifystreamerstage1;
 
 import android.app.Activity;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,10 +10,7 @@ import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
 
-import java.util.Arrays;
 import java.util.List;
-
-import kaaes.spotify.webapi.android.models.Artist;
 
 /**
  * Created by work on 7/5/15.
@@ -31,9 +27,7 @@ public class ArtistPictureAdapter extends ArrayAdapter<artistPicture> {
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         artistPicture ArtistPicture = getItem(position);
-        //View rootView = LayoutInflater.from(getContext()).inflate(R.layout.list_item_artist, parent, false);
 
-        // prob need to check convertView to see if it is being recycled
         if (convertView == null) {
             convertView = LayoutInflater.from(getContext()).inflate(R.layout.list_item_artist, parent, false);
         }
@@ -46,9 +40,10 @@ public class ArtistPictureAdapter extends ArrayAdapter<artistPicture> {
             //Log.d(LOG_TAG,ArtistPicture.name);
         } else {
             ImageView iconView = (ImageView) convertView.findViewById(R.id.imageView);
-            iconView.setImageResource(android.R.color.transparent);
+            iconView.setImageResource(R.drawable.ghost);
+//            iconView.setImageResource(android.R.color.transparent); optional way to handle no artist
             TextView ArtistName = (TextView) convertView.findViewById(R.id.textView);
-            ArtistName.setText("");
+            ArtistName.setText("No Artists Found");
         }
 
         return convertView;

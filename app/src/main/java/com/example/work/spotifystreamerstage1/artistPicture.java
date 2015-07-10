@@ -1,7 +1,5 @@
 package com.example.work.spotifystreamerstage1;
 
-import android.media.Image;
-
 /**
  * Created by work on 7/5/15.
  */

@@ -1,13 +1,11 @@
 package com.example.work.spotifystreamerstage1;
 
 import android.app.Activity;
-import android.content.res.Resources;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
@@ -38,8 +36,9 @@ public class TrackInfoAdapter extends ArrayAdapter<trackInfo> {
 
         if (trackInfo.trackName.equals("none") == false) {
             ImageView iconView = (ImageView) convertView.findViewById(R.id.imageViewCD);
-            iconView.setImageResource(R.drawable.ghost);
-            //Picasso.with(getContext()).load(trackInfo.artThumbnail).fit().placeholder(R.drawable.ghost).into(iconView);
+            //iconView.setImageResource(R.drawable.ghost);
+//            Picasso.with(getContext()).load(trackInfo.artThumbnail).resize(75,75)
+            Picasso.with(getContext()).load(trackInfo.artThumbnail).fit().placeholder(R.drawable.ghost).into(iconView);
             TextView track = (TextView) convertView.findViewById(R.id.textViewTrack);
             track.setText(trackInfo.trackName);
             TextView album = (TextView) convertView.findViewById(R.id.textViewAlbum);

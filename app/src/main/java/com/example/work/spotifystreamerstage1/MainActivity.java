@@ -8,6 +8,8 @@ import android.view.MenuItem;
 
 // consulted stackoverflow.com and developer.android.com for reference material on java
 // https://guides.codepath.com/android/Using-an-ArrayAdapter-with-ListView
+// also consulted commonsware - Busy Android Coder's Guide
+// and of course the Sunshine App and Google-Udacity videos
 
 public class MainActivity extends ActionBarActivity {
 
@@ -17,7 +19,7 @@ public class MainActivity extends ActionBarActivity {
         setContentView(R.layout.activity_main);
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
-                    .add(R.id.container, new forecastFragment())
+                    .add(R.id.container, new artistFragment())
                     .commit();
         }
     }

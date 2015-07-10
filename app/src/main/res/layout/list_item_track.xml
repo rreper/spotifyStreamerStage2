@@ -6,15 +6,17 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/textViewTrack"
-        android:textSize="30dp"
+        android:textSize="20dp"
         android:layout_alignParentTop="true"
         android:gravity="center_vertical"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true"
         android:layout_toRightOf="@+id/imageViewCD"
         android:layout_toEndOf="@+id/imageViewCD"
-        android:hint="track"
-        android:textIsSelectable="false" />
+        android:hint="Track"
+        android:textIsSelectable="false"
+        android:paddingLeft="20dp"
+        android:layout_marginTop="10dp" />
 
     <ImageView
         android:layout_width="wrap_content"
@@ -25,18 +27,25 @@
         android:layout_alignParentStart="true"
         android:minHeight="75dp"
         android:minWidth="75dp"
-        android:contentDescription="Artist Icon" />
+        android:contentDescription="Artist Icon"
+        android:src="@drawable/ghost"
+        android:maxHeight="75dp"
+        android:maxWidth="75dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="10dp"
+        android:layout_marginLeft="20dp" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/textViewAlbum"
-        android:textSize="30dp"
+        android:textSize="20dp"
         android:gravity="center_vertical"
         android:hint="Album"
         android:layout_below="@+id/textViewTrack"
         android:layout_toRightOf="@+id/imageViewCD"
-        android:layout_toEndOf="@+id/imageViewCD" />
+        android:layout_toEndOf="@+id/imageViewCD"
+        android:paddingLeft="20dp" />
 
 
 </RelativeLayout>

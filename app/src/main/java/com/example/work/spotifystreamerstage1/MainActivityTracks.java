@@ -1,33 +1,38 @@
 package com.example.work.spotifystreamerstage1;
 
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBar;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.os.Build;
 import android.widget.AdapterView;
-import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
 
+import kaaes.spotify.webapi.android.SpotifyApi;
+import kaaes.spotify.webapi.android.SpotifyService;
+import kaaes.spotify.webapi.android.models.Track;
+import kaaes.spotify.webapi.android.models.TracksPager;
+
 
 public class MainActivityTracks extends ActionBarActivity {
-    public final String TAG = "ActivityTracks";
+    public static final String TAG = "ActivityTracks";
     private static TrackInfoAdapter adapter;
 
     public static ArrayList<trackInfo> trackInfos = new ArrayList<trackInfo>();
     public static trackInfo noEntries = new trackInfo("none", "none", "none","none");
-    public int totalTracksFound = 0;
-    public int totalTracksShown = 0;
+    public static int totalTracksFound = 0;
+    public static int totalTracksShown = 0;
 
     public static String artistNameString = null;
     public TextView artistCount;
@@ -44,7 +49,7 @@ public class MainActivityTracks extends ActionBarActivity {
         }
 
         Intent intent = getIntent();
-        String message = intent.getStringExtra(forecastFragment.EXTRA_MESSAGE);
+        String message = intent.getStringExtra(artistFragment.EXTRA_MESSAGE);
         artistNameString = message;
 
         ActionBar myBar = getSupportActionBar();
@@ -89,10 +94,6 @@ public class MainActivityTracks extends ActionBarActivity {
                                  Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.fragment_main_activity_tracks, container, false);
 
-            trackInfo toby1 = new trackInfo("Toby Keith", "Beer For My Horses", "dummy","dummy");
-            trackInfo toby2 = new trackInfo("Toby Keith", "Good As I Once Was", "dummy","dummy");
-            trackInfos.add(toby1);
-            trackInfos.add(toby2);
             adapter = new TrackInfoAdapter(getActivity(), trackInfos);
 
             ListView trackView = (ListView) rootView.findViewById(R.id.listViewTracks);
@@ -107,10 +108,97 @@ public class MainActivityTracks extends ActionBarActivity {
             });
 
             if (artistNameString != null) {
-                //new fetchWeatherTask().execute(artistNameString);
+                new fetchTrackInfoTask().execute(artistNameString);
             }
 
             return rootView;
         }
     }
+
+    static private class fetchTrackInfoTask extends AsyncTask<String, String, ArrayList<trackInfo>> {
+        // These two need to be declared outside the try/catch
+        // so that they can be closed in the finally block.
+
+        SpotifyApi api = new SpotifyApi();
+
+        private final String asyncTAG = fetchTrackInfoTask.class.getSimpleName();
+
+        /**
+         * The system calls this to perform work in a worker thread and
+         * delivers it the parameters given to AsyncTask.execute()
+         */
+        protected ArrayList<trackInfo> doInBackground(String... id) {
+
+            totalTracksFound = 0;
+            totalTracksShown = 0;
+
+            if (id[0].equals("none") == false) {
+                Log.d(asyncTAG, "artist name " + id[0]);
+
+                SpotifyService spotify = api.getService();
+                TracksPager results = spotify.searchTracks(id[0]);
+
+                publishProgress("50%");
+
+                int len = results.tracks.total;
+                totalTracksFound = len;
+                if (len > 10) len = 10;  // list just the top 10
+                if (len != 0) {
+                    totalTracksShown = len;
+                    ArrayList<trackInfo> data = new ArrayList<trackInfo>();
+                    Log.d(asyncTAG, "len = " + len);
+                    Track item;
+                    for (int i = 0; i < len; i++) {
+                        item = results.tracks.items.get(i);
+                        trackInfo a =
+                            new trackInfo(item.name, item.album.name, item.album.images.get(0).url, item.preview_url.toString());
+                        data.add(a);
+                    }
+                    return data;
+                } else {
+                    ArrayList<trackInfo> data = new ArrayList<trackInfo>();
+                    data.add(noEntries);
+                    return data;
+                }
+            } else {
+                totalTracksShown = 0;
+                totalTracksFound = 0;
+                ArrayList<trackInfo> data = new ArrayList<trackInfo>();
+                data.add(noEntries);
+                return data;
+            }
+        }
+
+        @Override
+        protected void onPreExecute() {
+            Log.d(asyncTAG, "onPreExecute ... ");
+        }
+
+        /**
+         * The system calls this to perform work in the UI thread and delivers
+         * the result from doInBackground()
+         */
+        protected void onPostExecute(ArrayList<trackInfo> result) {
+            adapter.clear();
+            if (result != null) {
+                if (result.get(0).toString().equals("none"))
+                    Toast.makeText(adapter.getContext(), "No Artists Found", Toast.LENGTH_SHORT).show();
+                else
+                    adapter.addAll(result);
+
+            } else
+                Toast.makeText(adapter.getContext(), "Internet Connection problem?", Toast.LENGTH_LONG).show();
+
+            Log.d(TAG,Integer.toString(totalTracksShown) + " of " + Integer.toString(totalTracksFound));
+            publishProgress("100%");
+
+        }
+
+        @Override
+        protected void onProgressUpdate(String... progress) {
+            Log.d(asyncTAG, progress[0]);
+        }
+
+    }
+
 }
