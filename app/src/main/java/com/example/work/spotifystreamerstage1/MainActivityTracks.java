@@ -2,10 +2,10 @@ package com.example.work.spotifystreamerstage1;
 
 import android.content.Intent;
 import android.os.AsyncTask;
-import android.support.v7.app.ActionBarActivity;
-import android.support.v7.app.ActionBar;
-import android.support.v4.app.Fragment;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -18,11 +18,13 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import kaaes.spotify.webapi.android.SpotifyApi;
 import kaaes.spotify.webapi.android.SpotifyService;
 import kaaes.spotify.webapi.android.models.Track;
-import kaaes.spotify.webapi.android.models.TracksPager;
+import kaaes.spotify.webapi.android.models.Tracks;
 
 
 public class MainActivityTracks extends ActionBarActivity {
@@ -35,8 +37,7 @@ public class MainActivityTracks extends ActionBarActivity {
     public static int totalTracksShown = 0;
 
     public static String artistNameString = null;
-    public TextView artistCount;
-
+    public static String artistIDString = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,8 +50,8 @@ public class MainActivityTracks extends ActionBarActivity {
         }
 
         Intent intent = getIntent();
-        String message = intent.getStringExtra(artistFragment.EXTRA_MESSAGE);
-        artistNameString = message;
+        artistNameString = intent.getStringExtra(artistFragment.EXTRA_MESSAGE);
+        artistIDString = intent.getStringExtra(artistFragment.EXTRA_MESSAGE_ID);
 
         ActionBar myBar = getSupportActionBar();
         myBar.setTitle("Top 10 Tracks");
@@ -108,7 +109,7 @@ public class MainActivityTracks extends ActionBarActivity {
             });
 
             if (artistNameString != null) {
-                new fetchTrackInfoTask().execute(artistNameString);
+                new fetchTrackInfoTask().execute(artistNameString,artistIDString);
             }
 
             return rootView;
@@ -133,14 +134,16 @@ public class MainActivityTracks extends ActionBarActivity {
             totalTracksShown = 0;
 
             if (id[0].equals("none") == false) {
-                Log.d(asyncTAG, "artist name " + id[0]);
+                Log.d(asyncTAG, "artist name " + id[0] + "artist ID "+id[1]);
 
                 SpotifyService spotify = api.getService();
-                TracksPager results = spotify.searchTracks(id[0]);
+                final Map<String, Object> options = new HashMap<String, Object>();
+                options.put(SpotifyService.COUNTRY, "US");
+                Tracks results = spotify.getArtistTopTrack(id[1], options);
 
                 publishProgress("50%");
 
-                int len = results.tracks.total;
+                int len = results.tracks.size();
                 totalTracksFound = len;
                 if (len > 10) len = 10;  // list just the top 10
                 if (len != 0) {
@@ -149,9 +152,9 @@ public class MainActivityTracks extends ActionBarActivity {
                     Log.d(asyncTAG, "len = " + len);
                     Track item;
                     for (int i = 0; i < len; i++) {
-                        item = results.tracks.items.get(i);
+                        item = results.tracks.get(i);
                         trackInfo a =
-                            new trackInfo(item.name, item.album.name, item.album.images.get(0).url, item.preview_url.toString());
+                            new trackInfo(item.name, item.album.name, item.album.images.get(0).url, item.preview_url);
                         data.add(a);
                     }
                     return data;

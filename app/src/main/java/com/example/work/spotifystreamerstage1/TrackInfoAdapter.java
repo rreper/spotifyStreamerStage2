@@ -16,7 +16,6 @@ import java.util.List;
  * Created by work on 7/7/15.
  */
 public class TrackInfoAdapter extends ArrayAdapter<trackInfo> {
-    private static final String LOG_TAG = TrackInfoAdapter.class.getSimpleName();
     List<trackInfo> trackInfos;
 
     public TrackInfoAdapter(Activity context, List<trackInfo> trackInfos) {
@@ -48,7 +47,7 @@ public class TrackInfoAdapter extends ArrayAdapter<trackInfo> {
             ImageView iconView = (ImageView) convertView.findViewById(R.id.imageViewCD);
             iconView.setImageResource(android.R.color.transparent);
             TextView track = (TextView) convertView.findViewById(R.id.textViewTrack);
-            track.setText("");
+            track.setText("No tracks found");
             TextView album = (TextView) convertView.findViewById(R.id.textViewAlbum);
             album.setText("");
         }

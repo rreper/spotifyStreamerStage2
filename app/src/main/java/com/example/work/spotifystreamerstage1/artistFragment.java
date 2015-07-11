@@ -39,6 +39,7 @@ public class artistFragment extends Fragment {
 
     public final String TAG = "artistFragment";
     public final static String EXTRA_MESSAGE = "com.example.work.spotifystreamerstage1.MESSAGE";
+    public final static String EXTRA_MESSAGE_ID = "com.example.work.spotifystreamerstage1.MESSAGE_ID";
 
     public EditText artistName;
     public String artistNameString = null;
@@ -120,6 +121,7 @@ public class artistFragment extends Fragment {
                     Toast.makeText(getActivity(), value.name, Toast.LENGTH_SHORT).show();
                     Intent intent = new Intent(getActivity(), MainActivityTracks.class);
                     intent.putExtra(EXTRA_MESSAGE, value.name);
+                    intent.putExtra(EXTRA_MESSAGE_ID, value.id);
                     startActivity(intent);
                 }
             }
@@ -151,7 +153,7 @@ public class artistFragment extends Fragment {
                 //Log.d(asyncTAG, "artist name " + name[0]);
                 try {
                     SpotifyService spotify = api.getService();
-                    results = spotify.searchArtists(name[0]);
+                    results = spotify.searchArtists(name[0]); // default is 20 returned
                 }
                 catch (Exception e) {
                     Log.d(TAG,"Spotify service exception caught");
