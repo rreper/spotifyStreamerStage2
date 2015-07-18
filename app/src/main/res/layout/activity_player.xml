@@ -38,7 +38,7 @@
             android:layout_width="246dp"
             android:layout_height="246dp"
             android:id="@+id/imageViewPlayerArt"
-            android:src="@drawable/elk"
+            android:src="@drawable/ghost"
             android:layout_gravity="center"
             android:scaleType="fitCenter"
             android:maxHeight="246dp"
