@@ -14,9 +14,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.InterruptedIOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -32,12 +32,19 @@ public class MainActivityTracks extends ActionBarActivity {
     private static TrackInfoAdapter adapter;
 
     public static ArrayList<trackInfo> trackInfos = new ArrayList<trackInfo>();
-    public static trackInfo noEntries = new trackInfo("none", "none", "none","none");
+    public static trackInfo noEntries = new trackInfo("none","none", "none", "none","none", "none","none");
     public static int totalTracksFound = 0;
     public static int totalTracksShown = 0;
 
     public static String artistNameString = null;
     public static String artistIDString = null;
+
+    public final static String EXTRA_MESSAGE_ARTIST = "com.example.work.spotifystreamerstage1.MESSAGE_ARTIST";
+    public final static String EXTRA_MESSAGE_TRACK = "com.example.work.spotifystreamerstage1.MESSAGE_TRACK";
+    public final static String EXTRA_MESSAGE_ALBUM = "com.example.work.spotifystreamerstage1.MESSAGE_ALBUM";
+    public final static String EXTRA_MESSAGE_ART = "com.example.work.spotifystreamerstage1.MESSAGE_ART";
+    public final static String EXTRA_MESSAGE_PREVIEW = "com.example.work.spotifystreamerstage1.MESSAGE_PREVIEW";
+    public final static String EXTRA_MESSAGE_ALBUM_ID = "com.example.work.spotifystreamerstage1.MESSAGE_ALBUM_ID";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -105,6 +112,15 @@ public class MainActivityTracks extends ActionBarActivity {
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                     trackInfo value = adapter.getItem(position);
                     Toast.makeText(getActivity(), value.trackName, Toast.LENGTH_SHORT).show();
+                    Intent intent = new Intent(getActivity(), PlayerActivity.class);
+                    intent.putExtra(EXTRA_MESSAGE_ARTIST, value.artistName);
+                    intent.putExtra(EXTRA_MESSAGE_TRACK, value.trackName);
+                    intent.putExtra(EXTRA_MESSAGE_ALBUM, value.albumName);
+                    intent.putExtra(EXTRA_MESSAGE_ART, value.desiredArt);
+                    intent.putExtra(EXTRA_MESSAGE_PREVIEW, value.previewUrl);
+                    intent.putExtra(EXTRA_MESSAGE_ALBUM_ID, value.albumID);
+                    startActivity(intent);
+
                 }
             });
 
@@ -129,6 +145,7 @@ public class MainActivityTracks extends ActionBarActivity {
          * delivers it the parameters given to AsyncTask.execute()
          */
         protected ArrayList<trackInfo> doInBackground(String... id) {
+            Tracks results;
 
             totalTracksFound = 0;
             totalTracksShown = 0;
@@ -136,12 +153,20 @@ public class MainActivityTracks extends ActionBarActivity {
             if (id[0].equals("none") == false) {
                 Log.d(asyncTAG, "artist name " + id[0] + "artist ID "+id[1]);
 
-                SpotifyService spotify = api.getService();
-                final Map<String, Object> options = new HashMap<String, Object>();
-                options.put(SpotifyService.COUNTRY, "US");
-                Tracks results = spotify.getArtistTopTrack(id[1], options);
-
                 publishProgress("50%");
+                try {
+                    SpotifyService spotify = api.getService();
+                    final Map<String, Object> options = new HashMap<String, Object>();
+                    options.put(SpotifyService.COUNTRY, "US");
+                    results = spotify.getArtistTopTrack(id[1], options);
+                } catch (Exception e) {
+                    totalTracksShown = 0;
+                    totalTracksFound = 0;
+                    ArrayList<trackInfo> data = new ArrayList<trackInfo>();
+                    data.add(noEntries);
+                    e.printStackTrace();
+                    return data;
+                }
 
                 int len = results.tracks.size();
                 totalTracksFound = len;
@@ -151,10 +176,16 @@ public class MainActivityTracks extends ActionBarActivity {
                     ArrayList<trackInfo> data = new ArrayList<trackInfo>();
                     Log.d(asyncTAG, "len = " + len);
                     Track item;
+                    int desiredArt = 0;
+                    int maxFound = 0;
                     for (int i = 0; i < len; i++) {
                         item = results.tracks.get(i);
-                        trackInfo a =
-                            new trackInfo(item.name, item.album.name, item.album.images.get(0).url, item.preview_url);
+                        for (int j=0; j<item.album.images.size(); j++) {
+                            //Log.d(asyncTAG, "image size h " + item.album.images.get(j).height + " w " + item.album.images.get(j).width);
+                            if (item.album.images.get(j).width > maxFound) { desiredArt = j; maxFound = item.album.images.get(j).width; }
+                        }
+                        trackInfo a = new trackInfo(artistNameString, item.name, item.album.name,
+                                item.album.images.get(0).url, item.preview_url, item.album.images.get(desiredArt).url, item.album.id);
                         data.add(a);
                     }
                     return data;

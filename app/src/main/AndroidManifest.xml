@@ -23,6 +23,14 @@
             android:name=".MainActivityTracks"
             android:label="@string/title_activity_main_activity_tracks" >
         </activity>
+        <activity
+            android:name=".PlayerActivity"
+            android:label="@string/title_activity_player"
+            android:parentActivityName=".MainActivityTracks" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.example.work.spotifystreamerstage1.MainActivityTracks" />
+        </activity>
     </application>
 
 </manifest>

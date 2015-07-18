@@ -8,5 +8,6 @@
     <string name="title_activity_detail_activty">detailActivty</string>
     <string name="artist">Artist Name</string>
     <string name="title_activity_main_activity_tracks">MainActivityTracks</string>
+    <string name="title_activity_player">PlayerActivity</string>
 
 </resources>

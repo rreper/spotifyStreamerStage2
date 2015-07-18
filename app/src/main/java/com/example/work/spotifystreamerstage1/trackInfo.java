@@ -12,15 +12,21 @@ public class trackInfo {
     Album art thumbnail (large (640px for Now Playing screen) and small (200px for list items)). If the image size does not exist in the API response, you are free to choose whatever size is available.)
     preview url* - This is an HTTP url that you use to stream audio. You won’t need to use this until Stage 2.
      */
+    String artistName;
     String trackName;
     String albumName;
     String artThumbnail;
     String previewUrl;
+    String desiredArt;
+    String albumID;
 
-    public trackInfo(String trackName, String albumName, String artThumbnail, String previewUrl) {
+    public trackInfo(String artistName, String trackName, String albumName, String artThumbnail, String previewUrl, String desired, String albumID) {
+        this.artistName = artistName;
         this.trackName = trackName;
         this.albumName = albumName;
         this.artThumbnail = artThumbnail;
         this.previewUrl = previewUrl;
+        this.desiredArt = desired;
+        this.albumID = albumID;
     }
 }
