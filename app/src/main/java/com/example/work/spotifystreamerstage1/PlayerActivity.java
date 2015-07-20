@@ -121,6 +121,7 @@ public class PlayerActivity extends ActionBarActivity {
                     } else {
                         // paused and just want to move around
                         timeRemaining = mediaPlayer.getDuration() - progress;
+                        mediaPlayer.seekTo(progress);
                     }
                 }
             }
@@ -244,6 +245,7 @@ public class PlayerActivity extends ActionBarActivity {
             case R.id.imageButtonTrackPlay:
                 // if we are playing, we just want to pause
                 if (trackPlaying) {
+                    trackCompleted = false; // reset for next time
                     trackPlaying = false;
                     b.setImageResource(android.R.drawable.ic_media_play);
                     mediaPlayer.pause();
@@ -280,7 +282,7 @@ public class PlayerActivity extends ActionBarActivity {
                         // handle timer and seekbar
                         playTimer = new playerCountDownTimer(mediaPlayer.getDuration(), INTERVAL_MS, sb);
                         playTimer.start();
-                        Toast.makeText(getApplicationContext(), "Playing again", Toast.LENGTH_SHORT).show();
+                        //Toast.makeText(getApplicationContext(), "Playing again", Toast.LENGTH_SHORT).show();
 
                     } else {
                         // we paused and now want to continue
