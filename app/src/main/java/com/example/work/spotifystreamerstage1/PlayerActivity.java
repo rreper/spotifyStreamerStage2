@@ -188,9 +188,14 @@ public class PlayerActivity extends ActionBarActivity {
         super.onStop();
         Log.d("PlayerActivity:", "onStop");
         trackPlaying = false;
-        mediaPlayer.stop();
-        mediaPlayer.release();
-        mediaPlayer = null;
+        if (mediaPlayer != null) {
+            if (mediaPlayer.isPlaying()) {
+                mediaPlayer.pause();
+                mediaPlayer.stop();
+            }
+            mediaPlayer.release();
+            mediaPlayer = null;
+        }
         if (playTimer != null)
            playTimer.cancel();
     }
