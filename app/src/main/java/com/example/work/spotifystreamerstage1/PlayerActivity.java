@@ -3,17 +3,14 @@ package com.example.work.spotifystreamerstage1;
 import android.content.Intent;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
-import android.media.TimedText;
 import android.os.AsyncTask;
-import android.os.CountDownTimer;
+import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.SeekBar;
@@ -24,29 +21,31 @@ import com.squareup.picasso.Picasso;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
 import kaaes.spotify.webapi.android.SpotifyApi;
 import kaaes.spotify.webapi.android.SpotifyService;
 import kaaes.spotify.webapi.android.models.Album;
-import kaaes.spotify.webapi.android.models.Track;
-import kaaes.spotify.webapi.android.models.Tracks;
 
 
 public class PlayerActivity extends ActionBarActivity {
-    public String artistNameString;
-    public String trackNameString;
-    public String albumNameString;
-    public String artUrlString;
-    public String previewUrlString;
+    public String artistNameString = null;
+    public static String trackNameString = null;
+    public static int trackIndex = -1;
+    public String albumNameString = null;
+    public String artUrlString = null;
+    public String previewUrlString = null;
+    public String albumIDString = null;
     private static boolean trackPlaying = false;
     private MediaPlayer mediaPlayer;
     private static playerCountDownTimer playTimer = null;
     private long timeRemaining = 0;
     private final long INTERVAL_MS = 100;
     public static SeekBar sb = null;
+    public static ImageButton bPrev = null;
+    public static ImageButton bNext = null;
+    public static TextView trackName = null;
     private boolean trackCompleted = false;
+    public static Album spotifyResults = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,23 +62,28 @@ public class PlayerActivity extends ActionBarActivity {
         albumNameString = intent.getStringExtra(MainActivityTracks.EXTRA_MESSAGE_ALBUM);
         artUrlString = intent.getStringExtra(MainActivityTracks.EXTRA_MESSAGE_ART);
         previewUrlString = intent.getStringExtra(MainActivityTracks.EXTRA_MESSAGE_PREVIEW);
+        albumIDString = intent.getStringExtra(MainActivityTracks.EXTRA_MESSAGE_ALBUM_ID);
 
         TextView artistName = (TextView) findViewById(R.id.textViewPlayerArtist);
         artistName.setText(artistNameString);
-        TextView trackName = (TextView) findViewById(R.id.textViewPlayerTrack);
+        trackName = (TextView) findViewById(R.id.textViewPlayerTrack);
         trackName.setText(trackNameString);
         TextView albumName = (TextView) findViewById(R.id.textViewPlayerAlbum);
         albumName.setText(albumNameString);
+
+        // go get album info
+        if (albumIDString != null)
+            new fetchAlbumInfoTask().execute(albumNameString, albumIDString);
 
         // need image
         ImageView playerArtView = (ImageView) findViewById(R.id.imageViewPlayerArt);
         Picasso.with(getApplicationContext()).load(artUrlString).fit().placeholder(R.drawable.ghost).into(playerArtView);
 
         ImageButton b = (ImageButton) findViewById(R.id.imageButtonTrackPlay);
-        b.setEnabled(false); // disable until onPrepared gets called
-        ImageButton bPrev = (ImageButton) findViewById(R.id.imageButtonTrackPrev);
+        b.setEnabled(true); // disable until onPrepared gets called
+        bPrev = (ImageButton) findViewById(R.id.imageButtonTrackPrev);
         bPrev.setEnabled(false); // disable until onPrepared gets called
-        ImageButton bNext = (ImageButton) findViewById(R.id.imageButtonTrackNext);
+        bNext = (ImageButton) findViewById(R.id.imageButtonTrackNext);
         bNext.setEnabled(false); // disable until onPrepared gets called
 
         sb = (SeekBar) findViewById(R.id.seekBarPlayer);
@@ -95,8 +99,6 @@ public class PlayerActivity extends ActionBarActivity {
             public void onPrepared(MediaPlayer mp) {
                 int duration = 0;
                 if (mp.equals(mediaPlayer)) {
-                    ImageButton b = (ImageButton) findViewById(R.id.imageButtonTrackPlay);
-                    b.setEnabled(true);
 
                     duration = mediaPlayer.getDuration() / 1000;
 
@@ -108,6 +110,19 @@ public class PlayerActivity extends ActionBarActivity {
                         trackEnd.setText("0:" + Integer.toString(duration));
                     else
                         trackEnd.setText(Integer.toString(duration / 60) + ":" + Integer.toString(duration % 60));
+
+                    mediaPlayer.start();
+
+                    ImageButton b = (ImageButton) findViewById(R.id.imageButtonTrackPlay);
+                    b.setEnabled(true);
+                    trackPlaying = true;
+                    b.setImageResource(android.R.drawable.ic_media_pause);
+
+                    // handle timer and seekbar
+                    timeRemaining = 0;
+                    playTimer = new playerCountDownTimer(mediaPlayer.getDuration(), INTERVAL_MS, sb);
+                    playTimer.start();
+                    Log.d("PlayerActivity:", "onPreparedListener");
                 }
             }
         });
@@ -122,17 +137,11 @@ public class PlayerActivity extends ActionBarActivity {
                     b.setImageResource(android.R.drawable.ic_media_play);
                     Log.d("PlayerActivity:", "onCompletion");
                     trackCompleted = true;
-                    //mediaPlayer.seekTo(0);  // rewind or prev track?
+                    timeRemaining = 0;
+                    mediaPlayer.seekTo(0);  // rewind in case we want to play again
                 }
             }
         });
-
-        try {
-            mediaPlayer.setDataSource(previewUrlString);
-            mediaPlayer.prepareAsync(); // might take long! (for buffering, etc)
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
 
     }
 
@@ -148,29 +157,55 @@ public class PlayerActivity extends ActionBarActivity {
            playTimer.cancel();
     }
 
+    private void stopPlayer(ImageButton b) {
+        sb.setProgress(0);
+        trackCompleted = false; // reset so we know we have a new track
+        trackPlaying = false;
+        b.setImageResource(android.R.drawable.ic_media_play);
+        if (playTimer != null) {
+            timeRemaining = 0;
+            playTimer.cancel();
+            playTimer = null;
+        }
+        if (mediaPlayer != null) {
+            mediaPlayer.pause();
+            mediaPlayer.stop();
+            mediaPlayer.reset();  // get ready for the next track
+            //mediaPlayer.release();
+            //mediaPlayer = null;
+        }
+    }
+
     public void onClick(View v) {
         final int id = v.getId();
+        boolean found = false;
 
         ImageButton b = (ImageButton) findViewById(R.id.imageButtonTrackPlay);
 
         switch (id) {
             case R.id.imageButtonTrackPrev:
+                found = false;
 
-                timeRemaining = 0;
-                b.setEnabled(false);
+                if (trackIndex > 0 ) {
+                    trackIndex--;
+                    previewUrlString = spotifyResults.tracks.items.get(trackIndex).preview_url;
+                    trackNameString = spotifyResults.tracks.items.get(trackIndex).name;
+                    // need track name
+                    TextView trackName = (TextView) findViewById(R.id.textViewPlayerTrack);
+                    trackName.setText(trackNameString+" ("+Integer.toString(trackIndex+1)+" of "+spotifyResults.tracks.total+")");
+                    found = true;
+                }
 
-                Toast.makeText(getApplicationContext(), "imageButtonTrackPrev", Toast.LENGTH_SHORT).show();
-                try {
-                    mediaPlayer.setDataSource(previewUrlString);
-                    mediaPlayer.prepareAsync(); // might take long! (for buffering, etc)
-                } catch (IOException e) {
-                    e.printStackTrace();
+                if (found) {
+                    stopPlayer(b);
+                }
+                else {
+                    Toast.makeText(getApplicationContext(),"Track not found", Toast.LENGTH_SHORT).show();
                 }
 
                 break;
             case R.id.imageButtonTrackPlay:
-
-                //Toast.makeText(getApplicationContext(), "imageButtonTrackPlay", Toast.LENGTH_SHORT).show();
+                // if we are playing, we just want to pause
                 if (trackPlaying) {
                     trackPlaying = false;
                     b.setImageResource(android.R.drawable.ic_media_play);
@@ -182,33 +217,61 @@ public class PlayerActivity extends ActionBarActivity {
                     }
                 }
                 else {
+                    // this is a resume or a new track from the beginning
                     trackPlaying = true;
                     b.setImageResource(android.R.drawable.ic_media_pause);
-                    if (trackCompleted) {
-                        mediaPlayer.seekTo(0);
-                        trackCompleted = false;
-                    }
-                    mediaPlayer.start();
-                    if (timeRemaining == 0) {
+
+                    if ((trackCompleted == false) && (timeRemaining == 0)) {
+                        // a new track requested to play from the beginning
+                        if (mediaPlayer == null) {
+                            mediaPlayer = new MediaPlayer();
+                            Toast.makeText(getApplicationContext(), "Creating new mediaplayer", Toast.LENGTH_SHORT).show();
+                        }
+
+                        try {
+                            mediaPlayer.setDataSource(previewUrlString);
+                            mediaPlayer.prepareAsync(); // might take long! (for buffering, etc)
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        Toast.makeText(getApplicationContext(), "Preparing Audio Stream", Toast.LENGTH_SHORT).show();
+
+                    } else if (trackCompleted) {
+                        // just played a track and want to play again
+                        mediaPlayer.start();
+                        // handle timer and seekbar
                         playTimer = new playerCountDownTimer(mediaPlayer.getDuration(), INTERVAL_MS, sb);
+                        playTimer.start();
+                        Toast.makeText(getApplicationContext(), "Playing again", Toast.LENGTH_SHORT).show();
+
                     } else {
+                        // we paused and now want to continue
                         playTimer = new playerCountDownTimer(timeRemaining, INTERVAL_MS, sb);
+                        playTimer.start();
+                        mediaPlayer.start();
                     }
-                    playTimer.start();
                 }
                 break;
 
             case R.id.imageButtonTrackNext:
+                found = false;
 
-                timeRemaining = 0;
-                b.setEnabled(false);
+                // find the position of the current track and get prev
+                if ((trackIndex+1) < spotifyResults.tracks.total) {
+                    trackIndex++;
+                    previewUrlString = spotifyResults.tracks.items.get(trackIndex).preview_url;
+                    trackNameString = spotifyResults.tracks.items.get(trackIndex).name;
+                    // need track name
+                    TextView trackName = (TextView) findViewById(R.id.textViewPlayerTrack);
+                    trackName.setText(trackNameString+" ("+Integer.toString(trackIndex+1)+" of "+spotifyResults.tracks.total+")");
+                    found = true;
+                }
 
-                Toast.makeText(getApplicationContext(), "imageButtonTrackNext", Toast.LENGTH_SHORT).show();
-                try {
-                    mediaPlayer.setDataSource(previewUrlString);
-                    mediaPlayer.prepareAsync(); // might take long! (for buffering, etc)
-                } catch (IOException e) {
-                    e.printStackTrace();
+                if (found) {
+                    stopPlayer(b);
+                }
+                else {
+                    Toast.makeText(getApplicationContext(),"Track not found", Toast.LENGTH_SHORT).show();
                 }
 
                 break;
@@ -239,8 +302,7 @@ public class PlayerActivity extends ActionBarActivity {
         return super.onOptionsItemSelected(item);
     }
 
-/*
-    static private class fetchAlbumInfoTask extends AsyncTask<String, String, ArrayList<trackInfo>> {
+    static private class fetchAlbumInfoTask extends AsyncTask<String, String, Album> {
         // These two need to be declared outside the try/catch
         // so that they can be closed in the finally block.
 
@@ -251,64 +313,28 @@ public class PlayerActivity extends ActionBarActivity {
          // The system calls this to perform work in a worker thread and
          // delivers it the parameters given to AsyncTask.execute()
 
-        protected ArrayList<trackInfo> doInBackground(String... id) {
+        protected Album doInBackground(String... id) {
             Album results;
 
-            totalTracksFound = 0;
-            totalTracksShown = 0;
-
             if (id[0].equals("none") == false) {
-                Log.d(asyncTAG, "artist name " + id[0] + "album name "+id[1]);
+                Log.d(asyncTAG, "album name " + id[0] + "album id "+id[1]);
 
                 publishProgress("50%");
                 try {
                     SpotifyService spotify = api.getService();
-//                    final Map<String, Object> options = new HashMap<String, Object>();
-//                    options.put(SpotifyService.COUNTRY, "US");
-//                    results = spotify.getArtistTopTrack(id[1], options);
                     results = spotify.getAlbum(id[1]);
-                    results.tracks.items.get(0).id;  // get the id at the mainactivitytracks and store it with name then use it here?
                 } catch (Exception e) {
-                    totalTracksShown = 0;
-                    totalTracksFound = 0;
-                    ArrayList<trackInfo> data = new ArrayList<trackInfo>();
-                    data.add(noEntries);
                     e.printStackTrace();
-                    return data;
+                    return null;
                 }
 
-                int len = results.tracks.size();
-                totalTracksFound = len;
-                if (len > 10) len = 10;  // list just the top 10
-                if (len != 0) {
-                    totalTracksShown = len;
-                    ArrayList<trackInfo> data = new ArrayList<trackInfo>();
-                    Log.d(asyncTAG, "len = " + len);
-                    Track item;
-                    int desiredArt = 0;
-                    int maxFound = 0;
-                    for (int i = 0; i < len; i++) {
-                        item = results.tracks.get(i);
-                        for (int j=0; j<item.album.images.size(); j++) {
-                            //Log.d(asyncTAG, "image size h " + item.album.images.get(j).height + " w " + item.album.images.get(j).width);
-                            if (item.album.images.get(j).width > maxFound) { desiredArt = j; maxFound = item.album.images.get(j).width; }
-                        }
-                        trackInfo a = new trackInfo(artistNameString, item.name, item.album.name,
-                                item.album.images.get(0).url, item.preview_url, item.album.images.get(desiredArt).url);
-                        data.add(a);
-                    }
-                    return data;
+                if (results.tracks.total != 0) {
+                    return results;
                 } else {
-                    ArrayList<trackInfo> data = new ArrayList<trackInfo>();
-                    data.add(noEntries);
-                    return data;
+                    return null;
                 }
             } else {
-                totalTracksShown = 0;
-                totalTracksFound = 0;
-                ArrayList<trackInfo> data = new ArrayList<trackInfo>();
-                data.add(noEntries);
-                return data;
+                return null;
             }
         }
 
@@ -320,18 +346,26 @@ public class PlayerActivity extends ActionBarActivity {
          // The system calls this to perform work in the UI thread and delivers
          // the result from doInBackground()
 
-        protected void onPostExecute(ArrayList<trackInfo> result) {
-            adapter.clear();
+        protected void onPostExecute(Album result) {
             if (result != null) {
-                if (result.get(0).toString().equals("none"))
-                    Toast.makeText(adapter.getContext(), "No Artists Found", Toast.LENGTH_SHORT).show();
-                else
-                    adapter.addAll(result);
+                spotifyResults = result;
 
-            } else
-                Toast.makeText(adapter.getContext(), "Internet Connection problem?", Toast.LENGTH_LONG).show();
+                // find the position of the current track and get prev
+                for (int i=0; i<spotifyResults.tracks.total; i++) {
+                    String name = spotifyResults.tracks.items.get(i).name;
+                    if (trackNameString.equals(name)) {
+                        trackIndex = i;
+                    }
+                }
+                trackName.setText(trackNameString+" ("+Integer.toString(trackIndex+1)+" of "+spotifyResults.tracks.total+")");
 
-            Log.d(TAG,Integer.toString(totalTracksShown) + " of " + Integer.toString(totalTracksFound));
+                bPrev.setEnabled(true); // enable if there is something to play
+                bNext.setEnabled(true);
+
+            } else {
+                bPrev.setEnabled(false);
+                bNext.setEnabled(false);
+            }
             publishProgress("100%");
 
         }
@@ -342,7 +376,5 @@ public class PlayerActivity extends ActionBarActivity {
         }
 
     }
-
-    */
 
 }
