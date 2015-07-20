@@ -10,6 +10,7 @@ import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -88,7 +89,43 @@ public class PlayerActivity extends ActionBarActivity {
 
         sb = (SeekBar) findViewById(R.id.seekBarPlayer);
 
-        // need to handle when user drags seekbar to new point
+        sb.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress,
+                                          boolean fromUser) {
+                if (fromUser) {
+                    // stop timer
+                    if (playTimer != null) {
+                        playTimer.cancel();
+                    }
+
+                    if (trackPlaying) {
+                        mediaPlayer.pause();
+                        mediaPlayer.seekTo(progress);
+                        // create new timer
+                        playTimer = new playerCountDownTimer(mediaPlayer.getDuration() - progress, INTERVAL_MS, sb);
+                        playTimer.start();
+
+                        mediaPlayer.start();
+                    } else {
+                        // paused and just want to move around
+                        timeRemaining = mediaPlayer.getDuration() - progress;
+                    }
+                }
+            }
+
+        });
 
 
         mediaPlayer = new MediaPlayer();
@@ -238,6 +275,7 @@ public class PlayerActivity extends ActionBarActivity {
 
                     } else if (trackCompleted) {
                         // just played a track and want to play again
+                        trackCompleted = false; // reset for next time
                         mediaPlayer.start();
                         // handle timer and seekbar
                         playTimer = new playerCountDownTimer(mediaPlayer.getDuration(), INTERVAL_MS, sb);
@@ -246,6 +284,7 @@ public class PlayerActivity extends ActionBarActivity {
 
                     } else {
                         // we paused and now want to continue
+                        //Toast.makeText(getApplicationContext(), "Paused resuming "+Long.toString(timeRemaining), Toast.LENGTH_SHORT).show();
                         playTimer = new playerCountDownTimer(timeRemaining, INTERVAL_MS, sb);
                         playTimer.start();
                         mediaPlayer.start();

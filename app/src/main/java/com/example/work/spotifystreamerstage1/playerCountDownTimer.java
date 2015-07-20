@@ -15,7 +15,7 @@ public class playerCountDownTimer extends CountDownTimer {
     {
         super(start, interval);
         this.sb = sb;
-        Log.d("playerCountDownTimer", "start " + Long.toString(start) + " interval " + Long.toString(interval));
+        //Log.d("playerCountDownTimer", "start " + Long.toString(start) + " interval " + Long.toString(interval));
     }
 
     @Override
