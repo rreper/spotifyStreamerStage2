@@ -175,6 +175,7 @@ public class MainActivityTracks extends ActionBarActivity {
         } else {
             if (adapter != null)
                 adapter.clear();
+
         }
 
     }
