@@ -93,6 +93,19 @@ public class PlayerActivity extends ActionBarActivity {
         previewUrlString = intent.getStringExtra(MainActivityTracks.EXTRA_MESSAGE_PREVIEW);
         albumIDString = intent.getStringExtra(MainActivityTracks.EXTRA_MESSAGE_ALBUM_ID);
 
+        if (savedInstanceState != null) {
+            artistNameString = savedInstanceState.getString("artist");
+            trackNameString = savedInstanceState.getString("trackName");
+            albumNameString = savedInstanceState.getString("albumName");
+            artUrlString = savedInstanceState.getString("artUrl");
+            previewUrlString = savedInstanceState.getString("preview");
+            albumIDString = savedInstanceState.getString("id");
+
+            trackIndex = savedInstanceState.getInt("track");
+            Log.d("savedInstanceState:", "restoring info");
+        }
+
+
         TextView artistName = (TextView) findViewById(R.id.textViewPlayerArtist);
         artistName.setText(artistNameString);
         trackName = (TextView) findViewById(R.id.textViewPlayerTrack);
@@ -100,7 +113,10 @@ public class PlayerActivity extends ActionBarActivity {
         TextView albumName = (TextView) findViewById(R.id.textViewPlayerAlbum);
         albumName.setText(albumNameString);
 
-        // go get album info
+        // go get album info for the current track album which I think is a better approach than
+        // playing the top 10 tracks in a row since it gives the user access to the album ... but
+        // my new solution conforms to the specs - it just has a call here and the async that could
+        // be replaced in a refactor
         if (albumIDString != null)
             new fetchAlbumInfoTask().execute(albumNameString, albumIDString);
 
@@ -153,6 +169,7 @@ public class PlayerActivity extends ActionBarActivity {
                     }
                 }
             }
+
 
         });
 
@@ -209,6 +226,24 @@ public class PlayerActivity extends ActionBarActivity {
             }
         });
 
+        startPlayer(b);
+
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if (artistNameString != null) {
+            outState.putString("artist", artistNameString);
+            outState.putString("trackName", trackNameString);
+            outState.putString("albumName", albumNameString);
+            outState.putString("artUrl", artUrlString);
+            outState.putString("preview", previewUrlString);
+            outState.putString("id", albumIDString);
+            outState.putInt("track", trackIndex);
+
+            Log.d("onSaveInstanceState:", "saving preview and track");
+        }
     }
 
     @Override
@@ -227,6 +262,26 @@ public class PlayerActivity extends ActionBarActivity {
         }
         if (playTimer != null)
            playTimer.cancel();
+    }
+
+    private void startPlayer(ImageButton b) {
+        trackPlaying = true;
+        b.setImageResource(android.R.drawable.ic_media_pause);
+
+        // a new track requested to play from the beginning
+        if (mediaPlayer == null) {
+            mediaPlayer = new MediaPlayer();
+            Toast.makeText(getApplicationContext(), "Creating new mediaplayer", Toast.LENGTH_SHORT).show();
+        }
+
+        try {
+            mediaPlayer.setDataSource(previewUrlString);
+            mediaPlayer.prepareAsync(); // might take long! (for buffering, etc)
+            Toast.makeText(getApplicationContext(), "Preparing Audio Stream", Toast.LENGTH_SHORT).show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
     private void stopPlayer(ImageButton b) {
@@ -251,6 +306,7 @@ public class PlayerActivity extends ActionBarActivity {
     public void onClick(View v) {
         final int id = v.getId();
         boolean found = false;
+        trackInfo track;
 
         ImageButton b = (ImageButton) findViewById(R.id.imageButtonTrackPlay);
 
@@ -258,18 +314,33 @@ public class PlayerActivity extends ActionBarActivity {
             case R.id.imageButtonTrackPrev:
                 found = false;
 
-                if (trackIndex > 0 ) {
-                    trackIndex--;
-                    previewUrlString = spotifyResults.tracks.items.get(trackIndex).preview_url;
-                    trackNameString = spotifyResults.tracks.items.get(trackIndex).name;
+                track = MainActivityTracks.getPreviousTrack();
+
+                if (track != null) {
+                    if (trackNameString.equals(track.trackName))
+                        Toast.makeText(getApplicationContext(),"Beginning of Top 10",Toast.LENGTH_SHORT).show();
+                    artistNameString = track.artistName;
+                    trackNameString = track.trackName;
+                    albumNameString = track.albumName;
+                    artUrlString = track.desiredArt;
+                    previewUrlString = track.previewUrl;
+                    albumIDString = track.albumID;
                     // need track name
                     TextView trackName = (TextView) findViewById(R.id.textViewPlayerTrack);
-                    trackName.setText(trackNameString+" ("+Integer.toString(trackIndex+1)+" of "+spotifyResults.tracks.total+")");
+                    trackName.setText(track.trackName);
+                    TextView albumName = (TextView) findViewById(R.id.textViewPlayerAlbum);
+                    albumName.setText(track.albumName);
+
+                    // need image
+                    ImageView playerArtView = (ImageView) findViewById(R.id.imageViewPlayerArt);
+                    Picasso.with(getApplicationContext()).load(track.desiredArt).fit().placeholder(R.drawable.ghost).into(playerArtView);
+
                     found = true;
                 }
 
                 if (found) {
                     stopPlayer(b);
+                    startPlayer(b);
                 }
                 else {
                     Toast.makeText(getApplicationContext(),"Track not found", Toast.LENGTH_SHORT).show();
@@ -336,19 +407,32 @@ public class PlayerActivity extends ActionBarActivity {
             case R.id.imageButtonTrackNext:
                 found = false;
 
-                // find the position of the current track and get prev
-                if ((trackIndex+1) < spotifyResults.tracks.total) {
-                    trackIndex++;
-                    previewUrlString = spotifyResults.tracks.items.get(trackIndex).preview_url;
-                    trackNameString = spotifyResults.tracks.items.get(trackIndex).name;
+                track = MainActivityTracks.getNextTrack();
+
+                if (track != null) {
+                    if (trackNameString.equals(track.trackName))
+                        Toast.makeText(getApplicationContext(),"End of Top 10",Toast.LENGTH_SHORT).show();
+                    artistNameString = track.artistName;
+                    trackNameString = track.trackName;
+                    albumNameString = track.albumName;
+                    artUrlString = track.desiredArt;
+                    previewUrlString = track.previewUrl;
+                    albumIDString = track.albumID;
                     // need track name
                     TextView trackName = (TextView) findViewById(R.id.textViewPlayerTrack);
-                    trackName.setText(trackNameString+" ("+Integer.toString(trackIndex+1)+" of "+spotifyResults.tracks.total+")");
+                    trackName.setText(track.trackName);
+                    TextView albumName = (TextView) findViewById(R.id.textViewPlayerAlbum);
+                    albumName.setText(track.albumName);
+
+                    // need image
+                    ImageView playerArtView = (ImageView) findViewById(R.id.imageViewPlayerArt);
+                    Picasso.with(getApplicationContext()).load(track.desiredArt).fit().placeholder(R.drawable.ghost).into(playerArtView);
                     found = true;
                 }
 
                 if (found) {
                     stopPlayer(b);
+                    startPlayer(b);
                 }
                 else {
                     Toast.makeText(getApplicationContext(),"Track not found", Toast.LENGTH_SHORT).show();

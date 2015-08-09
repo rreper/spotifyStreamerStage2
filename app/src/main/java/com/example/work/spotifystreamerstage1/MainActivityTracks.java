@@ -45,6 +45,7 @@ public class MainActivityTracks extends ActionBarActivity {
     public final static String EXTRA_MESSAGE_PREVIEW = "com.example.work.spotifystreamerstage1.MESSAGE_PREVIEW";
     public final static String EXTRA_MESSAGE_ALBUM_ID = "com.example.work.spotifystreamerstage1.MESSAGE_ALBUM_ID";
     public static boolean mTwoPane = false;
+    public static int lastTrackPosition = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -121,6 +122,7 @@ public class MainActivityTracks extends ActionBarActivity {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                     trackInfo value = adapter.getItem(position);
+                    lastTrackPosition = position;
                     Toast.makeText(getActivity(), value.trackName, Toast.LENGTH_SHORT).show();
 
                     //if (mTwoPane == false) {
@@ -144,6 +146,24 @@ public class MainActivityTracks extends ActionBarActivity {
 
             return rootView;
         }
+    }
+
+    public static trackInfo getNextTrack() {
+        trackInfo value;
+        if (lastTrackPosition+1 < adapter.getCount()) {
+            lastTrackPosition++;
+        }
+        value = adapter.getItem(lastTrackPosition);
+        return value;
+    }
+
+    public static trackInfo getPreviousTrack() {
+        trackInfo value;
+        if (lastTrackPosition-1 >= 0) {
+            lastTrackPosition--;
+        }
+        value = adapter.getItem(lastTrackPosition);
+        return value;
     }
 
     public static void updateArtistTracks(String artist, String id) {
