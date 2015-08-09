@@ -12,16 +12,35 @@ import android.view.MenuItem;
 // and of course the Sunshine App and Google-Udacity videos
 
 public class MainActivity extends ActionBarActivity {
+    public boolean mTwoPane = false;
+    public final String ARTIST_DETAIL_TAG = "ADT";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        if (findViewById(R.id.artist_detail_container) != null) {
+            //Toast.makeText(getApplicationContext(), "artist detail container found", Toast.LENGTH_SHORT).show();
+            mTwoPane = true;
+        } else {
+            mTwoPane = false;
+        }
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
-                    .add(R.id.container, new artistFragment())
+                    .add(R.id.fragment_forecast, new artistFragment())
                     .commit();
+
+            if (mTwoPane) {
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.artist_detail_container, new MainActivityTracks.PlaceholderFragment(),ARTIST_DETAIL_TAG)
+                        .commit();
+            }
+
         }
+
+
+
+
     }
 
 

@@ -44,6 +44,7 @@ public class MainActivityTracks extends ActionBarActivity {
     public final static String EXTRA_MESSAGE_ART = "com.example.work.spotifystreamerstage1.MESSAGE_ART";
     public final static String EXTRA_MESSAGE_PREVIEW = "com.example.work.spotifystreamerstage1.MESSAGE_PREVIEW";
     public final static String EXTRA_MESSAGE_ALBUM_ID = "com.example.work.spotifystreamerstage1.MESSAGE_ALBUM_ID";
+    public static boolean mTwoPane = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -99,7 +100,17 @@ public class MainActivityTracks extends ActionBarActivity {
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.fragment_main_activity_tracks, container, false);
+
+
+            View rootView = inflater.inflate(R.layout.activity_main, container, false);
+            if (rootView.findViewById(R.id.artist_detail_container) != null) {
+                //Toast.makeText(container.getContext(), "MainActivityTracks container "+artistNameString, Toast.LENGTH_SHORT).show();
+                mTwoPane = true;
+            } else {
+                mTwoPane = false;
+            }
+
+            rootView = inflater.inflate(R.layout.fragment_main_activity_tracks, container, false);
 
             adapter = new TrackInfoAdapter(getActivity(), trackInfos);
 
@@ -111,15 +122,19 @@ public class MainActivityTracks extends ActionBarActivity {
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                     trackInfo value = adapter.getItem(position);
                     Toast.makeText(getActivity(), value.trackName, Toast.LENGTH_SHORT).show();
-                    Intent intent = new Intent(getActivity(), PlayerActivity.class);
-                    intent.putExtra(EXTRA_MESSAGE_ARTIST, value.artistName);
-                    intent.putExtra(EXTRA_MESSAGE_TRACK, value.trackName);
-                    intent.putExtra(EXTRA_MESSAGE_ALBUM, value.albumName);
-                    intent.putExtra(EXTRA_MESSAGE_ART, value.desiredArt);
-                    intent.putExtra(EXTRA_MESSAGE_PREVIEW, value.previewUrl);
-                    intent.putExtra(EXTRA_MESSAGE_ALBUM_ID, value.albumID);
-                    startActivity(intent);
 
+                    //if (mTwoPane == false) {
+                        Intent intent = new Intent(getActivity(), PlayerActivity.class);
+                        intent.putExtra(EXTRA_MESSAGE_ARTIST, value.artistName);
+                        intent.putExtra(EXTRA_MESSAGE_TRACK, value.trackName);
+                        intent.putExtra(EXTRA_MESSAGE_ALBUM, value.albumName);
+                        intent.putExtra(EXTRA_MESSAGE_ART, value.desiredArt);
+                        intent.putExtra(EXTRA_MESSAGE_PREVIEW, value.previewUrl);
+                        intent.putExtra(EXTRA_MESSAGE_ALBUM_ID, value.albumID);
+                        startActivity(intent);
+                    //} else {
+                    //    Toast.makeText(getActivity(), "Need Dialog for "+value.trackName, Toast.LENGTH_SHORT).show();
+                    //}
                 }
             });
 
@@ -131,7 +146,20 @@ public class MainActivityTracks extends ActionBarActivity {
         }
     }
 
-    static private class fetchTrackInfoTask extends AsyncTask<String, String, ArrayList<trackInfo>> {
+    public static void updateArtistTracks(String artist, String id) {
+        artistNameString = artist;
+        artistIDString = id;
+
+        if (artistNameString != null) {
+            new fetchTrackInfoTask().execute(artistNameString,artistIDString);
+        } else {
+            if (adapter != null)
+                adapter.clear();
+        }
+
+    }
+
+    static public class fetchTrackInfoTask extends AsyncTask<String, String, ArrayList<trackInfo>> {
         // These two need to be declared outside the try/catch
         // so that they can be closed in the finally block.
 

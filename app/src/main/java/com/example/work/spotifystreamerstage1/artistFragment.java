@@ -1,5 +1,6 @@
 package com.example.work.spotifystreamerstage1;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -13,6 +14,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -36,6 +38,8 @@ public class artistFragment extends Fragment {
     public artistPicture noEntries = new artistPicture("none", "none", "none");
     public int totalArtistsFound = 0;
     public int totalArtistsShown = 0;
+    public View lastView = null;
+    public int lastSelected=-1;
 
     public final String TAG = "artistFragment";
     public final static String EXTRA_MESSAGE = "com.example.work.spotifystreamerstage1.MESSAGE";
@@ -43,21 +47,31 @@ public class artistFragment extends Fragment {
 
     public EditText artistName;
     public String artistNameString = null;
+    public String artistIdString = null;
     public TextView artistCount;
+    private boolean mTwoPane = false;
 
     public artistFragment() {
+        mTwoPane = false;
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
+
         if (savedInstanceState != null) {
             artistNameString = savedInstanceState.getString("artist");
+            artistIdString = savedInstanceState.getString("id");
+            lastSelected = savedInstanceState.getInt("selected");
         }
         else {
             artistNameString = null;
+            artistIdString = null;
+            lastSelected = -1;
+            lastView = null;
         }
+
     }
 
     @Override
@@ -65,6 +79,8 @@ public class artistFragment extends Fragment {
         super.onSaveInstanceState(outState);
         if (artistNameString != null) {
             outState.putString("artist", artistNameString);
+            outState.putString("id",artistIdString);
+            outState.putInt("selected", lastSelected);
         }
     }
 
@@ -85,7 +101,18 @@ public class artistFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.fragment_main, container, false);
+
+
+        View rootView = inflater.inflate(R.layout.activity_main, container, false);
+        if (rootView.findViewById(R.id.artist_detail_container) != null) {
+            //Toast.makeText(container.getContext(), "artistFragment container "+artistNameString, Toast.LENGTH_SHORT).show();
+            mTwoPane = true;
+            MainActivityTracks.updateArtistTracks(artistNameString,artistIdString);
+        } else {
+            mTwoPane = false;
+        }
+
+        rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
         artistName = (EditText)rootView.findViewById(R.id.editText);
         artistCount = (TextView)rootView.findViewById(R.id.textView2);
@@ -103,6 +130,7 @@ public class artistFragment extends Fragment {
                     artistNameString = "none";
                     new fetchArtistTask().execute("none");
                 }
+                MainActivityTracks.updateArtistTracks(null,null);
             }
             public void beforeTextChanged(CharSequence s, int start, int count, int after){}
             public void onTextChanged(CharSequence s, int start, int before, int count){}
@@ -112,17 +140,43 @@ public class artistFragment extends Fragment {
 
         ListView weatherView = (ListView) rootView.findViewById(R.id.listViewForecast);
         weatherView.setAdapter(adapter);
+//        weatherView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
+//        weatherView.setBackground(getResources().getDrawable(R.drawable.touch_selector));
+//        weatherView.setClickable(true);
 
         weatherView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                InputMethodManager inputManager =
+                        (InputMethodManager) parent.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                inputManager.hideSoftInputFromWindow(view.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+/*
+                // set the last item selected background back to transparent
+                if (lastView != null) {
+                    lastView.setBackgroundColor(Color.TRANSPARENT);
+                }
+
+                if (view != null) {
+                    view.setBackgroundColor(getResources().getColor(R.color.lightgreen));
+                    lastView = view;
+                    Toast.makeText(getActivity(), "set background color item "+position, Toast.LENGTH_SHORT).show();
+                }
+*/
+                lastSelected = position;
                 artistPicture value = adapter.getItem(position);
                 if (value.name.equals("none") == false) {
                     Toast.makeText(getActivity(), value.name, Toast.LENGTH_SHORT).show();
-                    Intent intent = new Intent(getActivity(), MainActivityTracks.class);
-                    intent.putExtra(EXTRA_MESSAGE, value.name);
-                    intent.putExtra(EXTRA_MESSAGE_ID, value.id);
-                    startActivity(intent);
+                    if (mTwoPane == false) {
+                        Intent intent = new Intent(getActivity(), MainActivityTracks.class);
+                        intent.putExtra(EXTRA_MESSAGE, value.name);
+                        intent.putExtra(EXTRA_MESSAGE_ID, value.id);
+                        startActivity(intent);
+                    } else {
+                        //Toast.makeText(getActivity(), "mTwoPane populate tracks!", Toast.LENGTH_SHORT).show();
+                        artistNameString = value.name;
+                        artistIdString = value.id;
+                        MainActivityTracks.updateArtistTracks(artistNameString, artistIdString);
+                    }
                 }
             }
         });

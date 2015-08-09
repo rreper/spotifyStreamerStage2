@@ -10,8 +10,9 @@ import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.SeekBar;
@@ -21,7 +22,6 @@ import android.widget.Toast;
 import com.squareup.picasso.Picasso;
 
 import java.io.IOException;
-import java.util.ArrayList;
 
 import kaaes.spotify.webapi.android.SpotifyApi;
 import kaaes.spotify.webapi.android.SpotifyService;
@@ -50,12 +50,40 @@ public class PlayerActivity extends ActionBarActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        int ydpi, xdpi;
         super.onCreate(savedInstanceState);
+
+
+        if (MainActivityTracks.mTwoPane) {
+            this.supportRequestWindowFeature(Window.FEATURE_ACTION_BAR);
+            this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND,
+                    WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+            WindowManager.LayoutParams params = this.getWindow().getAttributes();
+            params.alpha = 1.0f;
+            params.dimAmount = 0.4f;
+            this.getWindow().setAttributes((android.view.WindowManager.LayoutParams) params);
+
+            int height = getResources().getDisplayMetrics().heightPixels;
+            int width = getResources().getDisplayMetrics().widthPixels;
+
+            if (height > width) { // portrait
+                ydpi = (int) ((float) getResources().getDisplayMetrics().heightPixels * 0.6);
+                xdpi = (int) ((float) getResources().getDisplayMetrics().widthPixels * 0.75);
+            } else {  // landscape
+                ydpi = (int) ((float) getResources().getDisplayMetrics().heightPixels * 0.75);
+                xdpi = (int) ((float) getResources().getDisplayMetrics().widthPixels * 0.5);
+            }
+            this.getWindow().setLayout(xdpi, ydpi);
+
+        }
         setContentView(R.layout.activity_player);
 
         ActionBar myBar = getSupportActionBar();
-        myBar.setTitle("Spotify Streamer");
-
+        if (MainActivityTracks.mTwoPane) {
+            myBar.hide();
+        } else {
+            myBar.setTitle("Spotify Streamer");
+        }
         // need to just pass the item so all tracks are available.
         Intent intent = getIntent();
         artistNameString = intent.getStringExtra(MainActivityTracks.EXTRA_MESSAGE_ARTIST);
@@ -186,6 +214,7 @@ public class PlayerActivity extends ActionBarActivity {
     @Override
     protected void onStop() {
         super.onStop();
+
         Log.d("PlayerActivity:", "onStop");
         trackPlaying = false;
         if (mediaPlayer != null) {
@@ -250,17 +279,21 @@ public class PlayerActivity extends ActionBarActivity {
             case R.id.imageButtonTrackPlay:
                 // if we are playing, we just want to pause
                 if (trackPlaying) {
+                    //stopRecording();
                     trackCompleted = false; // reset for next time
                     trackPlaying = false;
                     b.setImageResource(android.R.drawable.ic_media_play);
+
                     mediaPlayer.pause();
                     if (playTimer != null) {
                         timeRemaining = playTimer.timeRemaining;
                         playTimer.cancel();
                         playTimer = null;
                     }
+
                 }
                 else {
+                    //startRecording();
                     // this is a resume or a new track from the beginning
                     trackPlaying = true;
                     b.setImageResource(android.R.drawable.ic_media_pause);
@@ -296,6 +329,7 @@ public class PlayerActivity extends ActionBarActivity {
                         playTimer.start();
                         mediaPlayer.start();
                     }
+
                 }
                 break;
 

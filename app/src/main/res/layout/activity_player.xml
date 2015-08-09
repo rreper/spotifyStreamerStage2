@@ -74,7 +74,7 @@
         android:layout_alignParentEnd="true"
         android:layout_alignParentBottom="true"
         android:weightSum="1"
-        android:layout_marginBottom="25dp">
+        android:gravity="bottom">
 
         <ImageButton
             android:layout_width="80dp"
@@ -84,7 +84,10 @@
             android:layout_gravity="center_vertical"
             android:src="@android:drawable/ic_media_previous"
             android:onClick="onClick"
-            android:scaleType="center" />
+            android:scaleType="center"
+            android:maxHeight="32dp"
+            android:maxWidth="32dp"
+            android:longClickable="false" />
 
         <ImageButton
             android:layout_width="80dp"
