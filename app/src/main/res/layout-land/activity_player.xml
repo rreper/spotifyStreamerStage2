@@ -26,7 +26,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:textAppearance="@android:style/TextAppearance.DeviceDefault"
             android:text="Artist"
             android:id="@+id/textViewPlayerArtist"
             android:layout_gravity="center_horizontal" />
@@ -34,10 +34,10 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceLarge"
             android:text="Track"
             android:id="@+id/textViewPlayerTrack"
-            android:layout_gravity="center_horizontal" />
+            android:layout_gravity="center_horizontal"
+            android:textAppearance="@android:style/TextAppearance.DeviceDefault" />
 
         <ImageView
             android:layout_width="246dp"
@@ -46,12 +46,17 @@
             android:src="@drawable/ghost"
             android:layout_gravity="center"
             android:scaleType="fitCenter"
-            android:maxHeight="246dp"
-            android:maxWidth="246dp"
-            android:minHeight="246dp"
-            android:minWidth="246dp"
             android:nestedScrollingEnabled="false"
             android:layout_weight="1" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Album"
+            android:id="@+id/textViewPlayerAlbum"
+            android:layout_gravity="center_horizontal"
+            android:layout_weight="4"
+            android:textAppearance="@android:style/TextAppearance.DeviceDefault" />
 
         <SeekBar
             android:layout_width="fill_parent"
@@ -66,35 +71,26 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceLarge"
                 android:text="0:00"
                 android:id="@+id/textViewTrackStart"
                 android:layout_alignParentLeft="true"
                 android:layout_alignParentStart="true"
                 android:layout_above="@+id/linearLayout2"
                 android:layout_gravity="left"
-                android:layout_weight="5" />
+                android:layout_weight="20"
+                android:textAppearance="@android:style/TextAppearance.DeviceDefault" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceLarge"
-                android:text="Album"
-                android:id="@+id/textViewPlayerAlbum"
-                android:layout_gravity="center_horizontal"
-                android:layout_weight="4" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceLarge"
                 android:text="0:00"
                 android:id="@+id/textViewTrackEnd"
                 android:layout_below="@+id/linearLayout"
                 android:layout_alignRight="@+id/linearLayout"
                 android:layout_alignEnd="@+id/linearLayout"
                 android:gravity="top"
-                android:layout_weight="1" />
+                android:layout_weight="1"
+                android:textAppearance="@android:style/TextAppearance.DeviceDefault" />
         </LinearLayout>
 
         <LinearLayout

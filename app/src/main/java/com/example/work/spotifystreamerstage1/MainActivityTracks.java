@@ -46,6 +46,7 @@ public class MainActivityTracks extends ActionBarActivity {
     public final static String EXTRA_MESSAGE_ALBUM_ID = "com.example.work.spotifystreamerstage1.MESSAGE_ALBUM_ID";
     public static boolean mTwoPane = false;
     public static int lastTrackPosition = 0;
+    public static boolean restoredValues = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,12 +62,30 @@ public class MainActivityTracks extends ActionBarActivity {
         artistNameString = intent.getStringExtra(artistFragment.EXTRA_MESSAGE);
         artistIDString = intent.getStringExtra(artistFragment.EXTRA_MESSAGE_ID);
 
+        if (savedInstanceState != null) {
+            artistNameString = savedInstanceState.getString("trackartist");
+            ArrayList<trackInfo> tempTrackInfos = savedInstanceState.getParcelableArrayList("trackList");
+            if (tempTrackInfos != null)
+                trackInfos = tempTrackInfos;
+            Log.d(TAG,"restored trackList");
+            restoredValues = true;
+        }
+
         ActionBar myBar = getSupportActionBar();
         myBar.setTitle("Top 10 Tracks");
         myBar.setSubtitle(artistNameString);
 
     }
 
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if (artistNameString != null) {
+            outState.putString("trackartist", artistNameString);
+            if (trackInfos != null)
+                outState.putParcelableArrayList("trackList",trackInfos);
+        }
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -125,23 +144,21 @@ public class MainActivityTracks extends ActionBarActivity {
                     lastTrackPosition = position;
                     Toast.makeText(getActivity(), value.trackName, Toast.LENGTH_SHORT).show();
 
-                    //if (mTwoPane == false) {
-                        Intent intent = new Intent(getActivity(), PlayerActivity.class);
-                        intent.putExtra(EXTRA_MESSAGE_ARTIST, value.artistName);
-                        intent.putExtra(EXTRA_MESSAGE_TRACK, value.trackName);
-                        intent.putExtra(EXTRA_MESSAGE_ALBUM, value.albumName);
-                        intent.putExtra(EXTRA_MESSAGE_ART, value.desiredArt);
-                        intent.putExtra(EXTRA_MESSAGE_PREVIEW, value.previewUrl);
-                        intent.putExtra(EXTRA_MESSAGE_ALBUM_ID, value.albumID);
-                        startActivity(intent);
-                    //} else {
-                    //    Toast.makeText(getActivity(), "Need Dialog for "+value.trackName, Toast.LENGTH_SHORT).show();
-                    //}
+                    Intent intent = new Intent(getActivity(), PlayerActivity.class);
+                    intent.putExtra(EXTRA_MESSAGE_ARTIST, value.artistName);
+                    intent.putExtra(EXTRA_MESSAGE_TRACK, value.trackName);
+                    intent.putExtra(EXTRA_MESSAGE_ALBUM, value.albumName);
+                    intent.putExtra(EXTRA_MESSAGE_ART, value.desiredArt);
+                    intent.putExtra(EXTRA_MESSAGE_PREVIEW, value.previewUrl);
+                    intent.putExtra(EXTRA_MESSAGE_ALBUM_ID, value.albumID);
+                    startActivity(intent);
                 }
             });
 
-            if (artistNameString != null) {
-                new fetchTrackInfoTask().execute(artistNameString,artistIDString);
+            if ((mTwoPane == false) && (artistNameString != null)) {
+                if (restoredValues != true)
+                    new fetchTrackInfoTask().execute(artistNameString, artistIDString);
+                restoredValues = false;
             }
 
             return rootView;
@@ -167,14 +184,26 @@ public class MainActivityTracks extends ActionBarActivity {
     }
 
     public static void updateArtistTracks(String artist, String id) {
-        artistNameString = artist;
-        artistIDString = id;
 
-        if (artistNameString != null) {
-            new fetchTrackInfoTask().execute(artistNameString,artistIDString);
+        if ((artist != null) && (id != null)) {
+            if (artist.equals(artistNameString)) {
+                // do nothing because trackInfos was restored
+                if (adapter.getCount() == 0)  {
+                    artistNameString = artist;
+                    artistIDString = id;
+                    new fetchTrackInfoTask().execute(artistNameString, artistIDString);
+                }
+            }
+            else {
+                artistNameString = artist;
+                artistIDString = id;
+                new fetchTrackInfoTask().execute(artistNameString, artistIDString);
+            }
         } else {
-            if (adapter != null)
+            if (adapter != null) {
                 adapter.clear();
+                //Log.d("updateArtistTracks", "null name");
+            }
 
         }
 

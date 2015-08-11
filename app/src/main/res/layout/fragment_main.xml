@@ -7,15 +7,31 @@
     tools:context=".MainActivity$PlaceholderFragment"
     android:id="@+id/weatherFrame">
 
-    <EditText
-        android:layout_width="200dp"
-        android:layout_height="63dp"
-        android:id="@+id/editText"
-        android:layout_gravity="left|top"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:hint="Enter Artist Name"
-        android:imeOptions="actionDone"
-        android:singleLine="true" />
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="fill_parent"
+        android:layout_height="75dp">
+
+        <EditText
+            android:layout_width="200dp"
+            android:layout_height="63dp"
+            android:id="@+id/editText"
+            android:layout_gravity="left|top"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:hint="Enter Artist"
+            android:imeOptions="actionDone"
+            android:singleLine="true"
+            android:layout_weight="1" />
+
+        <TextView
+            android:layout_width="177dp"
+            android:layout_height="63dp"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:id="@+id/textView2"
+            android:layout_gravity="right|top"
+            android:gravity="center_vertical|center_horizontal"
+            android:layout_weight="1" />
+    </LinearLayout>
 
     <ListView
         android:layout_width="wrap_content"
@@ -25,13 +41,5 @@
         android:divider="@layout/divider"
         android:dividerHeight="3sp"
         android:layout_gravity="center_horizontal" />
-
-    <TextView
-        android:layout_width="177dp"
-        android:layout_height="63dp"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:id="@+id/textView2"
-        android:layout_gravity="right|top"
-        android:gravity="center_vertical|center_horizontal" />
 
 </FrameLayout>

@@ -1,4 +1,4 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
     android:layout_height="match_parent" android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
@@ -9,14 +9,16 @@
     <LinearLayout
         android:orientation="vertical"
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="fill_parent"
         android:layout_row="0"
         android:layout_column="0"
         android:weightSum="1"
         android:id="@+id/linearLayout"
         android:minHeight="275dp"
         android:minWidth="275dp"
-        android:measureWithLargestChild="false">
+        android:measureWithLargestChild="false"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true">
 
         <TextView
             android:layout_width="wrap_content"
@@ -35,8 +37,8 @@
             android:layout_gravity="center_horizontal" />
 
         <ImageView
-            android:layout_width="246dp"
-            android:layout_height="246dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:id="@+id/imageViewPlayerArt"
             android:src="@drawable/ghost"
             android:layout_gravity="center"
@@ -46,7 +48,7 @@
             android:minHeight="246dp"
             android:minWidth="246dp"
             android:nestedScrollingEnabled="false"
-            android:layout_weight="50" />
+            android:layout_weight="0.5" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -58,79 +60,89 @@
 
         <SeekBar
             android:layout_width="fill_parent"
-            android:layout_height="match_parent"
-            android:id="@+id/seekBarPlayer"
-            android:layout_gravity="center_horizontal" />
+            android:layout_height="wrap_content"
+            android:id="@+id/seekBarPlayer" />
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:text="0:00"
+                android:id="@+id/textViewTrackStart"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"
+                android:layout_above="@+id/linearLayout2"
+                android:layout_gravity="left"
+                android:layout_weight="10" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:text="0:00"
+                android:id="@+id/textViewTrackEnd"
+                android:layout_below="@+id/linearLayout"
+                android:layout_alignRight="@+id/linearLayout"
+                android:layout_alignEnd="@+id/linearLayout"
+                android:gravity="top"
+                android:layout_weight="1" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="fill_parent"
+            android:layout_height="50dp"
+            android:layout_row="1"
+            android:layout_column="0"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"
+            android:weightSum="1"
+            android:gravity="bottom"
+            android:layout_above="@+id/textViewTrackEnd"
+            android:id="@+id/linearLayout2">
+
+            <ImageButton
+                android:layout_width="106dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/imageButtonTrackPrev"
+                android:layout_gravity="center_vertical"
+                android:src="@android:drawable/ic_media_previous"
+                android:onClick="onClick"
+                android:scaleType="center"
+                android:maxHeight="32dp"
+                android:maxWidth="32dp"
+                android:longClickable="false"
+                android:layout_weight="0.33" />
+
+            <ImageButton
+                android:layout_width="106dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/imageButtonTrackPlay"
+                android:layout_gravity="center_vertical"
+                android:layout_marginLeft="40dp"
+                android:src="@android:drawable/ic_media_play"
+                android:onClick="onClick"
+                android:scaleType="center"
+                android:layout_weight="0.33" />
+
+            <ImageButton
+                android:layout_width="105dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/imageButtonTrackNext"
+                android:layout_gravity="center_vertical"
+                android:layout_marginLeft="40dp"
+                android:src="@android:drawable/ic_media_next"
+                android:onClick="onClick"
+                android:scaleType="center"
+                android:layout_weight="0.33" />
+        </LinearLayout>
 
     </LinearLayout>
 
-    <LinearLayout
-        android:orientation="horizontal"
-        android:layout_width="fill_parent"
-        android:layout_height="100dp"
-        android:layout_row="1"
-        android:layout_column="0"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentBottom="true"
-        android:weightSum="1"
-        android:gravity="bottom">
-
-        <ImageButton
-            android:layout_width="80dp"
-            android:layout_height="80dp"
-            android:id="@+id/imageButtonTrackPrev"
-            android:layout_weight=".33"
-            android:layout_gravity="center_vertical"
-            android:src="@android:drawable/ic_media_previous"
-            android:onClick="onClick"
-            android:scaleType="center"
-            android:maxHeight="32dp"
-            android:maxWidth="32dp"
-            android:longClickable="false" />
-
-        <ImageButton
-            android:layout_width="80dp"
-            android:layout_height="80dp"
-            android:id="@+id/imageButtonTrackPlay"
-            android:layout_weight=".33"
-            android:layout_gravity="center_vertical"
-            android:layout_marginLeft="40dp"
-            android:src="@android:drawable/ic_media_play"
-            android:onClick="onClick"
-            android:scaleType="center" />
-
-        <ImageButton
-            android:layout_width="80dp"
-            android:layout_height="80dp"
-            android:id="@+id/imageButtonTrackNext"
-            android:layout_weight=".33"
-            android:layout_gravity="center_vertical"
-            android:layout_marginLeft="40dp"
-            android:src="@android:drawable/ic_media_next"
-            android:onClick="onClick"
-            android:scaleType="center" />
-    </LinearLayout>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="0:00"
-        android:id="@+id/textViewTrackEnd"
-        android:layout_gravity="right"
-        android:layout_below="@+id/linearLayout"
-        android:layout_alignRight="@+id/linearLayout"
-        android:layout_alignEnd="@+id/linearLayout" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="0:00"
-        android:id="@+id/textViewTrackStart"
-        android:layout_gravity="left"
-        android:layout_below="@+id/linearLayout"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
-</RelativeLayout>
+</FrameLayout>

@@ -45,11 +45,13 @@ public class artistFragment extends Fragment {
     public final static String EXTRA_MESSAGE = "com.example.work.spotifystreamerstage1.MESSAGE";
     public final static String EXTRA_MESSAGE_ID = "com.example.work.spotifystreamerstage1.MESSAGE_ID";
 
-    public EditText artistName;
+    public static EditText artistName;
     public String artistNameString = null;
+    public String userEnteredString = null;
     public String artistIdString = null;
     public TextView artistCount;
     private boolean mTwoPane = false;
+    public boolean restoredValues = false;
 
     public artistFragment() {
         mTwoPane = false;
@@ -62,12 +64,25 @@ public class artistFragment extends Fragment {
 
         if (savedInstanceState != null) {
             artistNameString = savedInstanceState.getString("artist");
+            userEnteredString = savedInstanceState.getString("userEntered");
             artistIdString = savedInstanceState.getString("id");
             lastSelected = savedInstanceState.getInt("selected");
+            ArrayList<artistPicture> tempArtistPictures = savedInstanceState.getParcelableArrayList("artistList");
+            if (tempArtistPictures != null) {
+                artistPictures = tempArtistPictures;
+                Log.d(TAG,"restored artistList name "+artistNameString);
+                restoredValues = true;
+            }
+            Log.d(TAG,"onCreate with savedInstance called");
+
+            // hide soft keyboard
+            InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+            if (imm.isAcceptingText())
+                imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
         }
         else {
-            artistNameString = null;
-            artistIdString = null;
+            //artistNameString = null;
+            //artistIdString = null;
             lastSelected = -1;
             lastView = null;
         }
@@ -79,9 +94,27 @@ public class artistFragment extends Fragment {
         super.onSaveInstanceState(outState);
         if (artistNameString != null) {
             outState.putString("artist", artistNameString);
-            outState.putString("id",artistIdString);
+            outState.putString("id", artistIdString);
             outState.putInt("selected", lastSelected);
         }
+        if (userEnteredString != null)
+            outState.putString("userEntered", userEnteredString);
+        if (artistPictures != null)
+            outState.putParcelableArrayList("artistList", artistPictures);
+
+        Log.d(TAG,"onSaveInstanceState called");
+    }
+
+    @Override
+    public void onResume () {
+        super.onResume();
+
+        Log.d(TAG,"onResume called");
+
+        // Hide Keyboard
+        InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+        if (imm.isAcceptingText())
+            imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
     }
 
     @Override
@@ -119,18 +152,24 @@ public class artistFragment extends Fragment {
 
         artistName.addTextChangedListener(new TextWatcher(){
             public void afterTextChanged(Editable s) {
-                Log.d(TAG, "text entered " + s.toString());
                 String name = artistName.getText().toString();
-                // can get null when deleting the last character
-                if (name.isEmpty() == false) {
-                    artistNameString = name;
-                    new fetchArtistTask().execute(name);
+                if (restoredValues) {
+                    Log.d(TAG, "restored text " + s.toString());
+                    restoredValues = false;
+                } else if ((userEnteredString == null) ||
+                           ((userEnteredString != null) && (userEnteredString.equals(name) == false))) {
+                    Log.d(TAG, "text entered " + name);
+                    // can get null when deleting the last character
+                    if (name.isEmpty() == false) {
+                        userEnteredString = name;
+                        new fetchArtistTask().execute(name);
+                    }
+                    else {
+                        userEnteredString = "none";
+                        new fetchArtistTask().execute("none");
+                    }
+                    MainActivityTracks.updateArtistTracks(null,null);
                 }
-                else {
-                    artistNameString = "none";
-                    new fetchArtistTask().execute("none");
-                }
-                MainActivityTracks.updateArtistTracks(null,null);
             }
             public void beforeTextChanged(CharSequence s, int start, int count, int after){}
             public void onTextChanged(CharSequence s, int start, int before, int count){}
@@ -147,9 +186,10 @@ public class artistFragment extends Fragment {
         weatherView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                InputMethodManager inputManager =
+                InputMethodManager imm =
                         (InputMethodManager) parent.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-                inputManager.hideSoftInputFromWindow(view.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+                if (imm.isAcceptingText())
+                imm.hideSoftInputFromWindow(view.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
 /*
                 // set the last item selected background back to transparent
                 if (lastView != null) {
@@ -178,12 +218,13 @@ public class artistFragment extends Fragment {
                         MainActivityTracks.updateArtistTracks(artistNameString, artistIdString);
                     }
                 }
+                Log.d(TAG,"onclicklistener got called");
             }
         });
 
-        if (artistNameString != null) {
-            new fetchArtistTask().execute(artistNameString);
-        }
+//        if (artistNameString != null) {
+//            new fetchArtistTask().execute(artistNameString);
+//        }
 
         return rootView;
 
@@ -254,7 +295,9 @@ public class artistFragment extends Fragment {
 
         @Override
         protected void onPreExecute() {
+
             Log.d(asyncTAG,"onPreExecute ... ");
+
         }
 
         /** The system calls this to perform work in the UI thread and delivers

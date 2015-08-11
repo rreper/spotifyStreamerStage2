@@ -47,6 +47,8 @@ public class PlayerActivity extends ActionBarActivity {
     public static TextView trackName = null;
     private boolean trackCompleted = false;
     public static Album spotifyResults = null;
+    public static int saveTrackPosition = 0;
+    public boolean mediaPlayerPaused = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -100,6 +102,7 @@ public class PlayerActivity extends ActionBarActivity {
             artUrlString = savedInstanceState.getString("artUrl");
             previewUrlString = savedInstanceState.getString("preview");
             albumIDString = savedInstanceState.getString("id");
+            saveTrackPosition = savedInstanceState.getInt("trackPos");
 
             trackIndex = savedInstanceState.getInt("track");
             Log.d("savedInstanceState:", "restoring info");
@@ -194,6 +197,8 @@ public class PlayerActivity extends ActionBarActivity {
                     else
                         trackEnd.setText(Integer.toString(duration / 60) + ":" + Integer.toString(duration % 60));
 
+                    // saveTrackPosition will be 0 or the last saved location
+                    mediaPlayer.seekTo(saveTrackPosition);
                     mediaPlayer.start();
 
                     ImageButton b = (ImageButton) findViewById(R.id.imageButtonTrackPlay);
@@ -202,8 +207,8 @@ public class PlayerActivity extends ActionBarActivity {
                     b.setImageResource(android.R.drawable.ic_media_pause);
 
                     // handle timer and seekbar
-                    timeRemaining = 0;
-                    playTimer = new playerCountDownTimer(mediaPlayer.getDuration(), INTERVAL_MS, sb);
+                    timeRemaining = mediaPlayer.getDuration()-saveTrackPosition;
+                    playTimer = new playerCountDownTimer(timeRemaining, INTERVAL_MS, sb);
                     playTimer.start();
                     Log.d("PlayerActivity:", "onPreparedListener");
                 }
@@ -227,6 +232,7 @@ public class PlayerActivity extends ActionBarActivity {
         });
 
         startPlayer(b);
+        mediaPlayerPaused = false;
 
     }
 
@@ -241,7 +247,12 @@ public class PlayerActivity extends ActionBarActivity {
             outState.putString("preview", previewUrlString);
             outState.putString("id", albumIDString);
             outState.putInt("track", trackIndex);
+            if ((trackPlaying) || (mediaPlayerPaused))
+                saveTrackPosition = mediaPlayer.getCurrentPosition();
+            else
+                saveTrackPosition = 0;
 
+            outState.putInt("trackPos",saveTrackPosition);
             Log.d("onSaveInstanceState:", "saving preview and track");
         }
     }
@@ -288,6 +299,8 @@ public class PlayerActivity extends ActionBarActivity {
         sb.setProgress(0);
         trackCompleted = false; // reset so we know we have a new track
         trackPlaying = false;
+        mediaPlayerPaused = false;
+
         b.setImageResource(android.R.drawable.ic_media_play);
         if (playTimer != null) {
             timeRemaining = 0;
@@ -313,6 +326,8 @@ public class PlayerActivity extends ActionBarActivity {
         switch (id) {
             case R.id.imageButtonTrackPrev:
                 found = false;
+                saveTrackPosition = 0;
+                mediaPlayerPaused = false;
 
                 track = MainActivityTracks.getPreviousTrack();
 
@@ -355,6 +370,7 @@ public class PlayerActivity extends ActionBarActivity {
                     trackPlaying = false;
                     b.setImageResource(android.R.drawable.ic_media_play);
 
+                    mediaPlayerPaused = true;
                     mediaPlayer.pause();
                     if (playTimer != null) {
                         timeRemaining = playTimer.timeRemaining;
@@ -364,6 +380,7 @@ public class PlayerActivity extends ActionBarActivity {
 
                 }
                 else {
+                    mediaPlayerPaused = false;
                     //startRecording();
                     // this is a resume or a new track from the beginning
                     trackPlaying = true;
@@ -406,6 +423,8 @@ public class PlayerActivity extends ActionBarActivity {
 
             case R.id.imageButtonTrackNext:
                 found = false;
+                saveTrackPosition = 0;
+                mediaPlayerPaused = false;
 
                 track = MainActivityTracks.getNextTrack();
 

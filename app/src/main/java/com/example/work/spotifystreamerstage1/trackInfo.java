@@ -1,9 +1,12 @@
 package com.example.work.spotifystreamerstage1;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 /**
  * Created by work on 7/7/15.
  */
-public class trackInfo {
+public class trackInfo implements Parcelable {
 
     /*
     For each track result you should extract the following data:
@@ -29,4 +32,40 @@ public class trackInfo {
         this.desiredArt = desired;
         this.albumID = albumID;
     }
+
+    // implement parcelable
+    public int describeContents() {
+        return 0;
+    }
+
+    private trackInfo(Parcel in) {
+        artistName = in.readString();
+        trackName = in.readString();
+        albumName = in.readString();
+        artThumbnail = in.readString();
+        previewUrl = in.readString();
+        desiredArt = in.readString();
+        albumID = in.readString();
+    }
+
+    public void writeToParcel(Parcel out, int flags) {
+        out.writeString(artistName);
+        out.writeString(trackName);
+        out.writeString(albumName);
+        out.writeString(artThumbnail);
+        out.writeString(previewUrl);
+        out.writeString(desiredArt);
+        out.writeString(albumID);
+    }
+
+    public static final Parcelable.Creator<trackInfo> CREATOR = new Parcelable.Creator<trackInfo>() {
+        public trackInfo createFromParcel(Parcel in) {
+            return new trackInfo(in);
+        }
+
+        public trackInfo[] newArray(int size) {
+            return new trackInfo[size];
+        }
+    };
+
 }
